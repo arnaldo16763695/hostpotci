@@ -1,1 +1,38 @@
+# Ignorar el directorio de vendor (dependencias de Composer)
+/vendor/
+
+# Ignorar el archivo de entorno (puede contener credenciales)
 .env
+
+# Ignorar archivos de configuración específicos (si no se deben compartir)
+/app/Config/App.php
+/app/Config/Database.php
+/app/Config/Email.php
+
+# Ignorar archivos de caché y logs
+/writable/cache/
+/writable/logs/
+/writable/session/
+/writable/uploads/
+
+# Ignorar archivos de desarrollo y debug
+/phpunit.xml
+/.idea/
+/.vscode/
+/.DS_Store
+
+# Ignorar archivos generados por Composer
+/composer.lock
+/composer.phar
+
+# Ignorar archivos de npm (si usas Node.js)
+/node_modules/
+/package-lock.json
+
+# Ignorar archivos de IDE
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+
+# Ignorar archivos de sistema
