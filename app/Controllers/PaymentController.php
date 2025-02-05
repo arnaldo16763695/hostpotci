@@ -180,9 +180,50 @@ class PaymentController extends BaseController
 
     public function getstatuspayment()
     {
+        $url = 'https://sandbox.flow.cl/api';
+        $url = $url . '/payment/getStatus';
 
+        //obtaining post variable
         $post = $this->request->getPost();
+        // echo print_r($post);
 
-        echo print_r($post);
+        $params = array(
+            "apiKey" => "56349F7B-7FAE-424C-921C-70A982BL39A1",
+            "token" => $post['token']
+        );
+
+        //order my keys
+        $keys = array_keys($params);
+        sort($keys);
+
+        //concatenation 
+        $toSign = "";
+        foreach ($keys as $key) {
+            $toSign .= $key . $params[$key];
+        };
+
+        $signature = hash_hmac('sha256', $toSign, 'f798565f885a0a94e2aed2b04ba7fccd0f9a72bd');
+
+        // agrega la firma a los parámetros
+        $params["s"] = $signature;
+
+        $url = $url . "?" . http_build_query($params);
+        try {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+            $response = curl_exec($ch);
+            if ($response === false) {
+                $error = curl_error($ch);
+                throw new Exception($error, 1);
+            }
+            $info = curl_getinfo($ch);
+            if (!in_array($info['http_code'], array('200', '400', '401'))) {
+                throw new Exception('Unexpected error occurred. HTTP_CODE: ' . $info['http_code'], $info['http_code']);
+            }
+            echo $response;
+        } catch (Exception $e) {
+            echo 'Error: ' . $e->getCode() . ' - ' . $e->getMessage();
+        }
     }
 }
