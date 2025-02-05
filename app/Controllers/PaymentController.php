@@ -74,8 +74,8 @@ class PaymentController extends BaseController
             'mac' => $post['mac']
         ]);
 
-        $urlConfirmation = 'https://ajedev.com';
-        $urlReturn = 'https://vit.gob.ve';
+        $urlConfirmation = 'https://hostpot.ajedev.com/getstatuspayment';
+        $urlReturn = 'https://google.com';
         // $s = 'la firma de los parámetros efectuada con su secretKey';
 
         // data to create order
@@ -93,7 +93,7 @@ class PaymentController extends BaseController
 
         //this is the commerceOrder to use in api
         $commerceOrder = $lastOrder['codeOrder'];
-      
+
 
         $params = array(
             "apiKey" => $apikey,
@@ -176,5 +176,13 @@ class PaymentController extends BaseController
             // Manejo de errores
             echo 'Error: ' . $e->getCode() . ' - ' . $e->getMessage();
         }
+    }
+
+    public function getstatuspayment()
+    {
+
+        $post = $this->request->getPost();
+
+        echo print_r($post);
     }
 }

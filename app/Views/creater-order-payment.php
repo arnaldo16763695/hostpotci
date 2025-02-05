@@ -10,7 +10,7 @@
         <div class="card shadow-lg rounded">
             <div class="card-body p-4">
                 <h5 class="card-title text-center">Elije tu plan de internet</h5>
-                <form action="createOrder" method="POST">
+                <form action="<?= base_url('createOrder') ?>" method="POST">
                     <?= csrf_field(); ?>
                     <div class="mb-3">
                         <div class="mb-3">
