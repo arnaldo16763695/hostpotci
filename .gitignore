@@ -14,6 +14,7 @@
 /writable/logs/
 /writable/session/
 /writable/uploads/
+/writable/debugbar/
 
 # Ignorar archivos de desarrollo y debug
 /phpunit.xml
