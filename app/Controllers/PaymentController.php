@@ -75,7 +75,7 @@ class PaymentController extends BaseController
         ]);
 
         $urlConfirmation = 'https://hostpot.ajedev.com/getstatuspayment';
-        $urlReturn = 'https://google.com';
+        $urlReturn = 'https://hostpot.ajedev.com/getstatuspayment';
         // $s = 'la firma de los parámetros efectuada con su secretKey';
 
         // data to create order
