@@ -5,6 +5,6 @@ use CodeIgniter\Router\RouteCollection;
 /**
  * @var RouteCollection $routes
  */
-$routes->get('hostpot', 'HostpotController::index');
+$routes->get('/', 'HostpotController::index');
 $routes->post('creater-order-payment', 'PaymentController::index');
 $routes->post('createOrder', 'PaymentController::createOrder');
