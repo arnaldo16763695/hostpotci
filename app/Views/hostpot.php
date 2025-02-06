@@ -17,8 +17,8 @@
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary">Siguiente</button>
                     </div>
-                    <input type="hidden" class="form-control" id="ip" name="ip" value="<?= '192.168.0.7' ?>" placeholder="">
-                    <input type="hidden" class="form-control" id="mac" name="mac" value="<?= 'df:34:67:09:ab:23' ?>" placeholder="">
+                    <input type="hidden" class="form-control" id="ip" name="ip" value="<?= $_POST['ip']; ?>" placeholder="">
+                    <input type="hidden" class="form-control" id="mac" name="mac" value="<?= $_POST['mac']; ?>" placeholder="">
 
                 </form>
                 <?php if (session()->getFlashdata('errors') !== null): ?>

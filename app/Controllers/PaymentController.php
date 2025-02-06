@@ -7,7 +7,7 @@ namespace App\Controllers;
 
 use App\Models\OrdersModel;
 use  Exception;
-// use App\Libraries\RouterosAPI;
+use App\Libraries\RouterosAPI;
 
 class PaymentController extends BaseController
 {
@@ -221,7 +221,69 @@ class PaymentController extends BaseController
             if (!in_array($info['http_code'], array('200', '400', '401'))) {
                 throw new Exception('Unexpected error occurred. HTTP_CODE: ' . $info['http_code'], $info['http_code']);
             }
-            echo $response;
+
+            //logic to connecte to mikrotik
+            if ($response['status'] === '2') {
+
+                $orderM = new OrdersModel();
+                // Datos a actualizar
+                $dataOrder = [
+                    'status' => 'PAGADA'
+                ];
+                $orderM->where('mac', $response['mac'])->update($dataOrder);
+
+
+                $ip = "10.50.0.4";
+                $username = "arnaldo";
+                $password = "M0v1n3t20";
+                $port = "8728";
+                $API = new RouterosAPI();
+                $API->debug = false;
+                $API->port = $port;
+                $userLog = '';
+                $users = [
+                    'user_1000',
+                    'user_3000',
+                    'user_10000',
+                ];
+
+                switch ($response['amount']) {
+                    case '1000':
+                        # loguear al usuario por 1 hora
+                        $userLog = $users[0];
+                        break;
+
+                    case '3000':
+                        # loguear al usuario por 2 días
+                        $userLog = $users[1];
+                        break;
+
+                    case '10000':
+                        # loguear al usuario por 7 días
+                        $userLog = $users[2];
+                        break;
+                }
+
+                if ($API->connect($ip, $username, $password)) {
+                    $mkconnec = $API->comm('/ip/hotspot/active/login', [
+                        'user' => $userLog,
+                        'password' => 'M0v1n3t20',
+                        'mac-address' => $response['optional']['mac'],
+                        'ip'     => $response['optional']['ip'], // Dirección IP del cliente
+                        // 'server'      => 'hotspot1', // Nombre del servidor Hotspot
+                    ]);
+                }
+
+                if (isset($mkconnec['!trap'])) {
+                    echo 'Error: ' . $response['!trap'][0]['message'];
+                } else {
+                    echo 'exito';
+                }
+
+                $API->disconnect(); // Desconectar de la API
+            }
+            // echo $response;
+            return  redirect()->to('https://www.google.com');
         } catch (Exception $e) {
             echo 'Error: ' . $e->getCode() . ' - ' . $e->getMessage();
         }
