@@ -232,7 +232,7 @@ class PaymentController extends BaseController
                 $dataOrder = [
                     'status' => 'PAGADA'
                 ];
-                $orderM->where('mac', $json_response['mac'])->update($dataOrder);
+                $orderM->where('mac', $json_response['optional']['mac'])->update($dataOrder);
 
 
                 $ip = "10.50.0.4";
