@@ -223,7 +223,7 @@ class PaymentController extends BaseController
             }
 
             //logic to connecte to mikrotik
-            if ($response['status'] === '2') {
+            if ($response['status'] === 2) {
 
                 $orderM = new OrdersModel();
                 // Datos a actualizar
