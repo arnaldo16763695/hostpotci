@@ -222,15 +222,17 @@ class PaymentController extends BaseController
                 throw new Exception('Unexpected error occurred. HTTP_CODE: ' . $info['http_code'], $info['http_code']);
             }
 
+            $json_response = json_decode($response, true);
+
             //logic to connecte to mikrotik
-            if ($response['status'] === 2) {
+            if ($json_response['status'] === 2) {
 
                 $orderM = new OrdersModel();
                 // Datos a actualizar
                 $dataOrder = [
                     'status' => 'PAGADA'
                 ];
-                $orderM->where('mac', $response['mac'])->update($dataOrder);
+                $orderM->where('mac', $json_response['mac'])->update($dataOrder);
 
 
                 $ip = "10.50.0.4";
@@ -247,7 +249,7 @@ class PaymentController extends BaseController
                     'user_10000',
                 ];
 
-                switch ($response['amount']) {
+                switch ($json_response['amount']) {
                     case '1000':
                         # loguear al usuario por 1 hora
                         $userLog = $users[0];
@@ -268,14 +270,14 @@ class PaymentController extends BaseController
                     $mkconnec = $API->comm('/ip/hotspot/active/login', [
                         'user' => $userLog,
                         'password' => 'M0v1n3t20',
-                        'mac-address' => $response['optional']['mac'],
-                        'ip'     => $response['optional']['ip'], // Dirección IP del cliente
+                        'mac-address' => $json_response['optional']['mac'],
+                        'ip'     => $json_response['optional']['ip'], // Dirección IP del cliente
                         // 'server'      => 'hotspot1', // Nombre del servidor Hotspot
                     ]);
                 }
 
                 if (isset($mkconnec['!trap'])) {
-                    echo 'Error: ' . $response['!trap'][0]['message'];
+                    echo 'Error: ' . $mkconnec['!trap'][0]['message'];
                 } else {
                     echo 'exito';
                 }
