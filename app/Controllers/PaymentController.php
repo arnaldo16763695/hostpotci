@@ -225,16 +225,13 @@ class PaymentController extends BaseController
             $json_response = json_decode($response, true);            
 
             //logic to connecte to mikrotik
-            if ($json_response['status'] === 3) {
+            if ($json_response['status'] === 2) {
 
-                $orderM = new OrdersModel();
-                // // Datos a actualizar
-                // $dataOrder = 
-                // $orderM->where('mac', $json_response['optional']['mac'])->update($dataOrder);
-
-                $orderM->where('mac', $json_response['optional']['mac'])->update([
-                    'status' => 'PAGADA'
-                ]);
+                $orderM = new OrdersModel();                
+                
+                $orderM->where('mac', $json_response['optional']['mac'])
+                       ->set(['status' => 'PAGADA'])
+                       ->update();
 
 
                 $ip = "10.50.0.4";
