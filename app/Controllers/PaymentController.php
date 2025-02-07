@@ -229,7 +229,7 @@ class PaymentController extends BaseController
 
                 $orderM = new OrdersModel();                
                 
-                $orderM->where('mac', $json_response['optional']['mac'])
+                $orderM->where('codeOrder', $json_response['commerceOrder'])
                        ->set(['status' => 'PAGADA'])
                        ->update();
 
