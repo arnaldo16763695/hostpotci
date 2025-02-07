@@ -225,7 +225,7 @@ class PaymentController extends BaseController
             $json_response = json_decode($response, true);            
 
             //logic to connecte to mikrotik
-            if ($json_response['status'] === 2) {
+            if ($json_response['status'] === 3) {
 
                 $orderM = new OrdersModel();
                 // // Datos a actualizar
@@ -285,9 +285,12 @@ class PaymentController extends BaseController
                 }
 
                 $API->disconnect(); // Desconectar de la API
+                return  redirect()->to('https://www.google.com');
+            }else{
+
+                echo  $json_response['optional']['mac'];
             }
             // echo $response;
-            return  redirect()->to('https://www.google.com');
         } catch (Exception $e) {
             echo 'Error: ' . $e->getCode() . ' - ' . $e->getMessage();
         }
