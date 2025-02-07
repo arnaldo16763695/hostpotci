@@ -64,8 +64,8 @@ class PaymentController extends BaseController
             'mac' => $post['mac']
         ]);
 
-        $urlConfirmation = 'https://hostpot.ajedev.com/getstatuspayment';
-        $urlReturn = 'https://hostpot.ajedev.com/getstatuspayment';
+        $urlConfirmation = 'http://hostpot.globalsi.cl/getstatuspayment';
+        $urlReturn = 'http://hostpot.globalsi.cl/getstatuspayment';
         // $s = 'la firma de los parámetros efectuada con su secretKey';
 
         // data to create order
