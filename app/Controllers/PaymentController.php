@@ -222,17 +222,19 @@ class PaymentController extends BaseController
                 throw new Exception('Unexpected error occurred. HTTP_CODE: ' . $info['http_code'], $info['http_code']);
             }
 
-            $json_response = json_decode($response, true);
+            $json_response = json_decode($response, true);            
 
             //logic to connecte to mikrotik
             if ($json_response['status'] === 2) {
 
-                // $orderM = new OrdersModel();
+                $orderM = new OrdersModel();
                 // // Datos a actualizar
-                // $dataOrder = [
-                //     'status' => 'PAGADA'
-                // ];
+                // $dataOrder = 
                 // $orderM->where('mac', $json_response['optional']['mac'])->update($dataOrder);
+
+                $orderM->where('mac', $json_response['optional']['mac'])->update([
+                    'status' => 'PAGADA'
+                ]);
 
 
                 $ip = "10.50.0.4";
