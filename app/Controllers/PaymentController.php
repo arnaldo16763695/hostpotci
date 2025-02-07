@@ -223,7 +223,7 @@ class PaymentController extends BaseController
                     ->update();
 
 
-                $ip = "10.50.0.4";
+                $ip = "186.64.123.188";
                 $username = "arnaldo";
                 $password = "M0v1n3t20";
                 $port = "8728";
