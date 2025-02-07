@@ -211,16 +211,16 @@ class PaymentController extends BaseController
                 throw new Exception('Unexpected error occurred. HTTP_CODE: ' . $info['http_code'], $info['http_code']);
             }
 
-            $json_response = json_decode($response, true);            
+            $json_response = json_decode($response, true);
 
             //logic to connecte to mikrotik
             if ($json_response['status'] === 2) {
 
-                $orderM = new OrdersModel();                
-                
+                $orderM = new OrdersModel();
+
                 $orderM->where('codeOrder', $json_response['commerceOrder'])
-                       ->set(['status' => 'PAGADA', 'email' => $json_response['payer']])
-                       ->update();
+                    ->set(['status' => 'PAGADA', 'email' => $json_response['payer']])
+                    ->update();
 
 
                 $ip = "10.50.0.4";
@@ -272,9 +272,12 @@ class PaymentController extends BaseController
 
                 $API->disconnect(); // Desconectar de la API
                 return  redirect()->to('https://www.google.com');
-            }else{
-
-                echo  $json_response['optional']['mac'];
+            } elseif ($json_response['status'] === 3) {
+                echo  '<h2>El pago ha sido rechazado</h2>';
+            } elseif ($json_response['status'] === 4) {
+                echo  '<h2>El pago ha sido anulado</h2>';
+            } elseif ($json_response['status'] === 1) {
+                echo  '<h2>El pago esta pendiente</h2>';
             }
             // echo $response;
         } catch (Exception $e) {
