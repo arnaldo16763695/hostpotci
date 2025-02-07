@@ -2,9 +2,6 @@
 
 namespace App\Controllers;
 
-// use App\Models\ClientsModel;
-// use App\Libraries\RouterosAPI;
-
 use App\Models\OrdersModel;
 use  Exception;
 use App\Libraries\RouterosAPI;
@@ -17,13 +14,10 @@ class PaymentController extends BaseController
         return  view('creater-order-payment');
     }
 
-
     protected $helpers = ['form'];
 
     public function createOrder()
     {
-
-
         $rules = [
             'email' => 'required|max_length[100]|valid_email',
             'mac' => 'required|max_length[50]',
@@ -49,8 +43,6 @@ class PaymentController extends BaseController
         $apikey = '56349F7B-7FAE-424C-921C-70A982BL39A1';
 
 
-
-
         $textPlan = '';
         if ($post['plan'] === '1000') {
             $textPlan = '1 hora';
@@ -66,8 +58,6 @@ class PaymentController extends BaseController
         $amount = $post['plan'];
         //$email
         $email = $post['email'];
-
-
 
         $optional = json_encode([
             'ip' => $post['ip'],
@@ -93,7 +83,6 @@ class PaymentController extends BaseController
 
         //this is the commerceOrder to use in api
         $commerceOrder = $lastOrder['codeOrder'];
-
 
         $params = array(
             "apiKey" => $apikey,
@@ -230,7 +219,7 @@ class PaymentController extends BaseController
                 $orderM = new OrdersModel();                
                 
                 $orderM->where('codeOrder', $json_response['commerceOrder'])
-                       ->set(['status' => 'PAGADA'])
+                       ->set(['status' => 'PAGADA', 'email' => $json_response['payer']])
                        ->update();
 
 
