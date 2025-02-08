@@ -39,8 +39,8 @@ class PaymentController extends BaseController
         $url = env('url_apiflow');
         $url = $url . '/payment/create';
 
-        $secretKey = 'f798565f885a0a94e2aed2b04ba7fccd0f9a72bd';
-        $apikey = '56349F7B-7FAE-424C-921C-70A982BL39A1';
+        $secretKey = env('secretKey');
+        $apikey = env('apikey');
 
 
         $textPlan = '';
