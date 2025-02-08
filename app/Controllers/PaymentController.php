@@ -36,7 +36,7 @@ class PaymentController extends BaseController
         $post = $this->request->getPost(['mac', 'ip', 'email', 'plan']);
 
         // Agrega a la url el servicio a consumir
-        $url = 'https://sandbox.flow.cl/api';
+        $url = env('url_apiflow');
         $url = $url . '/payment/create';
 
         $secretKey = 'f798565f885a0a94e2aed2b04ba7fccd0f9a72bd';
@@ -169,7 +169,7 @@ class PaymentController extends BaseController
 
     public function getstatuspayment()
     {
-        $url = 'https://sandbox.flow.cl/api';
+        $url = env('url_apiflow');
         $url = $url . '/payment/getStatus';
 
         //obtaining post variable
@@ -224,9 +224,9 @@ class PaymentController extends BaseController
 
 
                 $ip = env('ip_mikrotik');
-                $username = "arnaldo";
-                $password = "M0v1n3t20";
-                $port = "8728";
+                $username = env('username_mikrotik');
+                $password = env('password_mikrotik');
+                $port = env('port_mikrotik');
                 $API = new RouterosAPI();
                 $API->debug = false;
                 $API->port = $port;
@@ -267,11 +267,11 @@ class PaymentController extends BaseController
                 if (isset($mkconnec['!trap'])) {
                     echo 'Error: ' . $mkconnec['!trap'][0]['message'];
                 } else {
-                    echo 'exito';
+                    // echo 'exito';
+                    return  redirect()->to('https://www.google.com');
                 }
 
                 $API->disconnect(); // Desconectar de la API
-                return  redirect()->to('https://www.google.com');
             } elseif ($json_response['status'] === 3) {
                 echo  '<h2>El pago ha sido rechazado</h2>';
             } elseif ($json_response['status'] === 4) {
