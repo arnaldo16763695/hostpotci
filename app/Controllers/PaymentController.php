@@ -64,8 +64,8 @@ class PaymentController extends BaseController
             'mac' => $post['mac']
         ]);
 
-        $urlConfirmation = 'http://hostpot.globalsi.cl/getstatuspayment';
-        $urlReturn = 'http://hostpot.globalsi.cl/getstatuspayment';
+        $urlConfirmation = env('urlConfirmation');        
+        $urlReturn = env('urlReturn'); 
         // $s = 'la firma de los parámetros efectuada con su secretKey';
 
         // data to create order
@@ -223,7 +223,7 @@ class PaymentController extends BaseController
                     ->update();
 
 
-                $ip = "186.64.123.188";
+                $ip = env('ip_mikrotik');
                 $username = "arnaldo";
                 $password = "M0v1n3t20";
                 $port = "8728";
