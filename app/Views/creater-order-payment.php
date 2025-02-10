@@ -21,32 +21,32 @@
                             <div class="p-2 form-check">
                                 <input class="form-check-input" type="radio" name="plan" id="1000" value="1000" checked>
                                 <label class="form-check-label" for="1000">
-                                    1 hora de internet. costo: 1.000 $
+                                    1 Hora de Internet. $1.000 
                                 </label>
                             </div>
                             <div class="p-2 form-check">
                                 <input class="form-check-input" type="radio" name="plan" id="3000" value="3000">
                                 <label class="form-check-label" for="3000">
-                                    1 día de internet. costo: 3.000 $
+                                    1 Día de Internet. $3.000 
                                 </label>
                             </div>
                             <div class="p-2 form-check">
                                 <input class="form-check-input" type="radio" name="plan" id="5000" value="5000">
                                 <label class="form-check-label" for="5000">
-                                    2 días de internet. costo: 5.000 $
+                                    2 Días de Internet. $5.000 
                                 </label>
                             </div>
                             <div class="p-2 form-check">
                                 <input class="form-check-input" type="radio" name="plan" id="10000" value="10000">
                                 <label class="form-check-label" for="10000">
-                                    7 días de internet. costo: 10.000 $
+                                    7 Días de Internet. $10.000 
                                 </label>
                             </div>
                         </div>
 
                         <input type="hidden" class="form-control" id="ip" name="ip" value="<?= $_POST['ip']; ?>" placeholder="">
                         <input type="hidden" class="form-control" id="mac" name="mac" value="<?= $_POST['mac']; ?>" placeholder="">
-                        <div class="mb-3">
+                        <div class="mb-3 mt-3 d-flex justify-content-end">
                             <button type="submit" class="btn btn-primary">Siguiente</button>
                         </div>
 
