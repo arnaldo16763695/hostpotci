@@ -180,7 +180,7 @@ class PaymentController extends BaseController
         // echo print_r($post);
 
         $params = array(
-            "apiKey" => "56349F7B-7FAE-424C-921C-70A982BL39A1",
+            "apiKey" => env('apikey'),
             "token" => $post['token']
         );
 
@@ -194,7 +194,7 @@ class PaymentController extends BaseController
             $toSign .= $key . $params[$key];
         };
 
-        $signature = hash_hmac('sha256', $toSign, 'f798565f885a0a94e2aed2b04ba7fccd0f9a72bd');
+        $signature = hash_hmac('sha256', $toSign, env('secretKey'));
 
         // agrega la firma a los parámetros
         $params["s"] = $signature;
@@ -216,7 +216,7 @@ class PaymentController extends BaseController
 
             $json_response = json_decode($response, true);
 
-            echo json_encode($response);exit;
+           // echo json_encode($response);exit;
 
             //logic to connecte to mikrotik
             if ($json_response['status'] === 2) {
