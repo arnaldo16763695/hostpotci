@@ -44,11 +44,11 @@
                             </div>
                         </div>
 
+                        <input type="hidden" class="form-control" id="ip" name="ip" value="<?= $_POST['ip']; ?>" placeholder="">
+                        <input type="hidden" class="form-control" id="mac" name="mac" value="<?= $_POST['mac']; ?>" placeholder="">
                         <div class="mb-3">
                             <button type="submit" class="btn btn-primary">Siguiente</button>
                         </div>
-                        <input type="hidden" class="form-control" id="ip" name="ip" value="<?= $_POST['ip']; ?>" placeholder="">
-                        <input type="hidden" class="form-control" id="mac" name="mac" value="<?= $_POST['mac']; ?>" placeholder="">
 
                 </form>
                 <?php if (session()->getFlashdata('errors') !== null): ?>
