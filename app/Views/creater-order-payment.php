@@ -9,7 +9,7 @@
     <div class="col col-12 col-md-5 col-lg-4 ">
         <div class="card shadow-lg rounded">
             <div class="card-body p-4">
-                <h5 class="card-title text-center">Elije tu plan de internet</h5>
+                <h5 class="card-title text-center">Selecciona el tiempo de Internet que deseas.</h5>
                 <form action="<?= base_url('createOrder') ?>" method="POST">
                     <?= csrf_field(); ?>
                     <div class="mb-3  p-4">
@@ -25,9 +25,15 @@
                                 </label>
                             </div>
                             <div class="p-2 form-check">
-                                <input class="form-check-input" type="radio" name="plan" id="3000" value="3000">
+                                <input class="form-check-input" type="radio" name="plan" id="3000" value="3000" checked>
                                 <label class="form-check-label" for="3000">
-                                    2 días de internet. costo: 3.000 $
+                                    1 día de internet. costo: 3.000 $
+                                </label>
+                            </div>
+                            <div class="p-2 form-check">
+                                <input class="form-check-input" type="radio" name="plan" id="5000" value="5000">
+                                <label class="form-check-label" for="5000">
+                                    2 días de internet. costo: 5.000 $
                                 </label>
                             </div>
                             <div class="p-2 form-check">
@@ -37,7 +43,6 @@
                                 </label>
                             </div>
                         </div>
-                    </div>
 
                     <div class="mb-3">
                         <button type="submit" class="btn btn-primary">Siguiente</button>

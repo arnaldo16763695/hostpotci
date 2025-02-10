@@ -36,6 +36,7 @@ class PaymentController extends BaseController
         $post = $this->request->getPost(['mac', 'ip', 'email', 'plan']);
 
         // Agrega a la url el servicio a consumir
+        $url='';
         $url = env('url_apiflow');
         $url = $url . '/payment/create';
 
@@ -47,12 +48,14 @@ class PaymentController extends BaseController
         if ($post['plan'] === '1000') {
             $textPlan = '1 hora';
         } elseif ($post['plan'] === '3000') {
+            $textPlan = '1 día';
+        } elseif($post['plan'] === '5000') {
             $textPlan = '2 días';
-        } else {
+        } elseif($post['plan'] === '10000') {
             $textPlan = '7 días';
         }
 
-        $subject = 'Conexión a internet plan de: ' . $textPlan;
+        $subject = 'Conexión a internet tiempo: ' . $textPlan;
         //optional
         $currency = 'CLP';
         $amount = $post['plan'];
@@ -234,6 +237,7 @@ class PaymentController extends BaseController
                 $users = [
                     'user_1000',
                     'user_3000',
+                    'user_5000',
                     'user_10000',
                 ];
 
@@ -248,9 +252,13 @@ class PaymentController extends BaseController
                         $userLog = $users[1];
                         break;
 
-                    case '10000':
+                    case '5000':
                         # loguear al usuario por 7 días
                         $userLog = $users[2];
+                        break;
+                    case '10000':
+                        # loguear al usuario por 7 días
+                        $userLog = $users[3];
                         break;
                 }
 
