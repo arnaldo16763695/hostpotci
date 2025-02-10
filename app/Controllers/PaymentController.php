@@ -36,7 +36,7 @@ class PaymentController extends BaseController
         $post = $this->request->getPost(['mac', 'ip', 'email', 'plan']);
 
         // Agrega a la url el servicio a consumir
-        $url='';
+        
         $url = env('url_apiflow');
         $url = $url . '/payment/create';
 
