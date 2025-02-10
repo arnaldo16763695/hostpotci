@@ -25,7 +25,7 @@
                                 </label>
                             </div>
                             <div class="p-2 form-check">
-                                <input class="form-check-input" type="radio" name="plan" id="3000" value="3000" >
+                                <input class="form-check-input" type="radio" name="plan" id="3000" value="3000">
                                 <label class="form-check-label" for="3000">
                                     1 día de internet. costo: 3.000 $
                                 </label>
@@ -44,11 +44,11 @@
                             </div>
                         </div>
 
-                    <div class="mb-3">
-                        <button type="submit" class="btn btn-primary">Siguiente</button>
-                    </div>
-                    <input type="hidden" class="form-control" id="ip" name="ip" value="<?= $_POST['ip']; ?>" placeholder="">
-                    <input type="hidden" class="form-control" id="mac" name="mac" value="<?= $_POST['mac']; ?>" placeholder="">
+                        <div class="mb-3">
+                            <button type="submit" class="btn btn-primary">Siguiente</button>
+                        </div>
+                        <input type="hidden" class="form-control" id="ip" name="ip" value="<?= $_POST['ip']; ?>" placeholder="">
+                        <input type="hidden" class="form-control" id="mac" name="mac" value="<?= $_POST['mac']; ?>" placeholder="">
 
                 </form>
                 <?php if (session()->getFlashdata('errors') !== null): ?>
