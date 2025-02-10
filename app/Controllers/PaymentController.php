@@ -216,6 +216,8 @@ class PaymentController extends BaseController
 
             $json_response = json_decode($response, true);
 
+            echo json_encode($response);exit;
+
             //logic to connecte to mikrotik
             if ($json_response['status'] === 2) {
 
