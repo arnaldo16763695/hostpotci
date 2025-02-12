@@ -36,7 +36,7 @@ class PaymentController extends BaseController
         $post = $this->request->getPost(['mac', 'ip', 'email', 'plan']);
 
         // Agrega a la url el servicio a consumir
-        
+
         $url = env('url_apiflow');
         $url = $url . '/payment/create';
 
@@ -49,9 +49,9 @@ class PaymentController extends BaseController
             $textPlan = '1 hora';
         } elseif ($post['plan'] === '3000') {
             $textPlan = '1 día';
-        } elseif($post['plan'] === '5000') {
+        } elseif ($post['plan'] === '5000') {
             $textPlan = '2 días';
-        } elseif($post['plan'] === '10000') {
+        } elseif ($post['plan'] === '10000') {
             $textPlan = '7 días';
         }
 
@@ -67,8 +67,8 @@ class PaymentController extends BaseController
             'mac' => $post['mac']
         ]);
 
-        $urlConfirmation = env('urlConfirmation');        
-        $urlReturn = env('urlReturn'); 
+        $urlConfirmation = env('urlConfirmation');
+        $urlReturn = env('urlReturn');
         // $s = 'la firma de los parámetros efectuada con su secretKey';
 
         // data to create order
@@ -216,7 +216,7 @@ class PaymentController extends BaseController
 
             $json_response = json_decode($response, true);
 
-           // echo json_encode($response);exit;
+            // echo json_encode($response);exit;
 
             //logic to connecte to mikrotik
             if ($json_response['status'] === 2) {
@@ -293,5 +293,13 @@ class PaymentController extends BaseController
         } catch (Exception $e) {
             echo 'Error: ' . $e->getCode() . ' - ' . $e->getMessage();
         }
+    }
+
+
+
+    public function confirmation()
+    {
+        $confirmado = "Confirmado";
+        return  $confirmado;
     }
 }
