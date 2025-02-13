@@ -341,19 +341,18 @@ class PaymentController extends BaseController
             }
 
             $json_response = json_decode($response, true);
-            $response_json = json_encode($response);
 
-            $flow_order = $response_json['flowOrder'];
-            $commerceOrder = $response_json['commerceOrder'];
-            $requestDate = $response_json['requestDate'];
-            $status = $response_json['status'];
-            $subject = $response_json['subject'];
-            $currency = $response_json['currency'];
-            $amount = $response_json['amount'];
-            $payer = $response_json['payer'];
-            $ip = $response_json['optional']['ip'];
-            $mac = $response_json['optional']['mac'];
-            $media = $response_json['media'];
+            $flow_order = $json_response['flowOrder'];
+            $commerceOrder = $json_response['commerceOrder'];
+            $requestDate = $json_response['requestDate'];
+            $status = $json_response['status'];
+            $subject = $json_response['subject'];
+            $currency = $json_response['currency'];
+            $amount = $json_response['amount'];
+            $payer = $json_response['payer'];
+            $ip = $json_response['optional']['ip'];
+            $mac = $json_response['optional']['mac'];
+            $media = $json_response['media'];
         } catch (Exception $e) {
             echo 'Error: ' . $e->getCode() . ' - ' . $e->getMessage();
         }
