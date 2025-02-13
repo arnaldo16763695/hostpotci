@@ -352,11 +352,11 @@ class PaymentController extends BaseController
             $payer = $json_response['payer'];
             $ip = $json_response['optional']['ip'];
             $mac = $json_response['optional']['mac'];
-            $media = $json_response['media'];
+            
         } catch (Exception $e) {
             echo 'Error: ' . $e->getCode() . ' - ' . $e->getMessage();
         }
 
-        return view('confirmation', $flow_order, $commerceOrder, $requestDate, $status, $subject, $currency, $amount, $payer, $ip, $mac, $media);
+        return view('confirmation', $flow_order, $commerceOrder, $requestDate, $status, $subject, $currency, $amount, $payer, $ip, $mac);
     }
 }

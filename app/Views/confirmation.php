@@ -20,7 +20,7 @@
                     <li><?= $payer ?></li>
                     <li><?= $ip ?></li>
                     <li><?= $mac ?></li>
-                    <li><?= $media ?></li>
+                    
                 </ol>
 
 
