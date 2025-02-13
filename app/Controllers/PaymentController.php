@@ -276,12 +276,10 @@ class PaymentController extends BaseController
 
                 if (isset($mkconnec['!trap'])) {
                     echo 'Error: ' . $mkconnec['!trap'][0]['message'];
-                } else {
-                    // echo 'exito';
-                    return  redirect()->to('https://www.google.com');
                 }
 
                 $API->disconnect(); // Desconectar de la API
+                http_response_code(200);
             } elseif ($json_response['status'] === 3) {
                 echo  '<h2>El pago ha sido rechazado</h2>';
             } elseif ($json_response['status'] === 4) {
@@ -299,7 +297,67 @@ class PaymentController extends BaseController
 
     public function confirmation()
     {
-        $confirmado = "Confirmado";
-        return  $confirmado;
+        $url = env('url_apiflow');
+        $url = $url . '/payment/getStatus';
+
+        //obtaining post variable
+        $post = $this->request->getPost();
+        // echo print_r($post);
+
+        $params = array(
+            "apiKey" => env('apikey'),
+            "token" => $post['token']
+        );
+
+        //order my keys
+        $keys = array_keys($params);
+        sort($keys);
+
+        //concatenation 
+        $toSign = "";
+        foreach ($keys as $key) {
+            $toSign .= $key . $params[$key];
+        };
+
+        $signature = hash_hmac('sha256', $toSign, env('secretKey'));
+
+        // agrega la firma a los parámetros
+        $params["s"] = $signature;
+
+        $url = $url . "?" . http_build_query($params);
+
+        try {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+            $response = curl_exec($ch);
+            if ($response === false) {
+                $error = curl_error($ch);
+                throw new Exception($error, 1);
+            }
+            $info = curl_getinfo($ch);
+            if (!in_array($info['http_code'], array('200', '400', '401'))) {
+                throw new Exception('Unexpected error occurred. HTTP_CODE: ' . $info['http_code'], $info['http_code']);
+            }
+
+            $json_response = json_decode($response, true);
+            $response_json = json_encode($response);
+
+            $flow_order = $response_json['flowOrder'];
+            $commerceOrder = $response_json['commerceOrder'];
+            $requestDate = $response_json['requestDate'];
+            $status = $response_json['status'];
+            $subject = $response_json['subject'];
+            $currency = $response_json['currency'];
+            $amount = $response_json['amount'];
+            $payer = $response_json['payer'];
+            $ip = $response_json['optional']['ip'];
+            $mac = $response_json['optional']['mac'];
+            $media = $response_json['media'];
+        } catch (Exception $e) {
+            echo 'Error: ' . $e->getCode() . ' - ' . $e->getMessage();
+        }
+
+        return view('confirmation', $flow_order, $commerceOrder, $requestDate, $status, $subject, $currency, $amount, $payer, $ip, $mac, $media);
     }
 }
