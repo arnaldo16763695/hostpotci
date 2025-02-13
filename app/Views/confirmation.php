@@ -7,7 +7,7 @@
     <div class="col col-12 col-md-5 col-lg-4 ">
         <div class="card shadow-lg rounded">
             <div class="card-body p-4">
-                <h1 class='fs-4'>Bienvenido ya puedes disfrutar de Internet</h1>
+                <h1 class='fs-4'>Bienvenido <?= esc($status) === 2 ? 'puede conectarse a Internet' : 'revise los datos a continuación:' ?></h1>
                 <h3 class='fs-6'>Datos de tu orden, tambien puedes visualizarlo en tu correo:</h3>
                 <ul>
                     <li><span class="fw-bold">Nº orden: </span><?= esc($flow_order) ?></li>
