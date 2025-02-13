@@ -10,7 +10,7 @@
         <div class="card shadow-lg rounded">
             <div class="card-body p-4">
                 <ol>
-                    <li><?= esc($low_order) ?></li>
+                    <li><?= esc($flow_order) ?></li>
                     <li><?= esc($commerceOrder) ?></li>
                     <li><?= esc($requestDate)  ?></li>
                     <li><?= esc($status) ?></li>
