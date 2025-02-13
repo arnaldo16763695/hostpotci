@@ -7,7 +7,15 @@
     <div class="col col-12 col-md-5 col-lg-4 ">
         <div class="card shadow-lg rounded">
             <div class="card-body p-4">
-                <h1 class='fs-4'>Bienvenido <?= esc($status) === 2 ? 'puede conectarse a Internet' : 'revise los datos a continuación:' ?></h1>
+                <h1 class='fs-4'>Bienvenido <?php if (esc($status) === 2) {
+                                                echo 'puede conectarse a Internet';
+                                            } elseif (esc($status) === 3) {
+                                                echo 'El pago ha sido rechazado';
+                                            } elseif (esc($status) === 4) {
+                                                echo 'El pago ha sido anulado';
+                                            } elseif (esc($status) === 1) {
+                                                echo 'El pago está pendiente';
+                                            } ?></h1>
                 <h3 class='fs-6'>Datos de tu orden, tambien puedes visualizarlo en tu correo:</h3>
                 <ul>
                     <li><span class="fw-bold">Nº orden: </span><?= esc($flow_order) ?></li>
@@ -20,7 +28,13 @@
                     <li><span class="fw-bold">Su IP: </span><?= esc($ip) ?></li>
                     <li><span class="fw-bold">Su MAC: </span><?= esc($mac) ?></li>
                 </ul>
-                <button type="button" onclick="window.location.href='https://www.google.com'" class="btn btn-primary">Continuar</button>
+                <?php
+                if (esc($status) === 2) {
+                ?>
+                    <button type="button" onclick="window.location.href='https://www.google.com'" class="btn btn-primary">Continuar</button>
+                <?php
+                }
+                ?>
 
             </div>
 
