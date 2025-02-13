@@ -18,12 +18,7 @@
                             <input type="email" class="form-control" name="email" id="email" value="<?= set_value('email'); ?>" required autofocus>
                         </div>
                         <div class="d-flex flex-column  ">
-                            <div class="p-2 form-check">
-                                <input class="form-check-input" type="radio" name="plan" id="1000" value="1000" checked>
-                                <label class="form-check-label" for="1000">
-                                    1 Hora de Internet. $1.000 
-                                </label>
-                            </div>
+                           
                             <div class="p-2 form-check">
                                 <input class="form-check-input" type="radio" name="plan" id="3000" value="3000">
                                 <label class="form-check-label" for="3000">
