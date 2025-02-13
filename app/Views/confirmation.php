@@ -10,16 +10,16 @@
         <div class="card shadow-lg rounded">
             <div class="card-body p-4">
                 <ol>
-                    <li><?= $myData['flow_order'] ?></li>
-                    <li><?= $myData['commerceOrder'] ?></li>
-                    <li><?= $myData['requestDate']  ?></li>
-                    <li><?= $myData['status'] ?></li>
-                    <li><?= $myData['subject'] ?></li>
-                    <li><?= $myData['currency'] ?></li>
-                    <li><?= $myData['amount'] ?></li>
-                    <li><?= $myData['payer'] ?></li>
-                    <li><?= $myData['ip'] ?></li>
-                    <li><?= $myData['mac'] ?></li>
+                    <li><?= esc($low_order) ?></li>
+                    <li><?= esc($commerceOrder) ?></li>
+                    <li><?= esc($requestDate)  ?></li>
+                    <li><?= esc($status) ?></li>
+                    <li><?= esc($subject) ?></li>
+                    <li><?= esc($currency) ?></li>
+                    <li><?= esc($amount) ?></li>
+                    <li><?= esc($payer) ?></li>
+                    <li><?= esc($ip) ?></li>
+                    <li><?= esc($mac) ?></li>
 
                 </ol>
 
