@@ -20,7 +20,7 @@
                         <div class="d-flex flex-column  ">
                            
                             <div class="p-2 form-check">
-                                <input class="form-check-input" type="radio" name="plan" id="3000" value="3000">
+                                <input class="form-check-input" type="radio" name="plan" id="3000" value="3000" checked>
                                 <label class="form-check-label" for="3000">
                                     1 Día de Internet. $3.000 
                                 </label>
