@@ -342,21 +342,24 @@ class PaymentController extends BaseController
 
             $json_response = json_decode($response, true);
 
-            // $flow_order = $json_response['flowOrder'];
-            // $commerceOrder = $json_response['commerceOrder'];
-            // $requestDate = $json_response['requestDate'];
-            // $status = $json_response['status'];
-            // $subject = $json_response['subject'];
-            // $currency = $json_response['currency'];
-            // $amount = $json_response['amount'];
-            // $payer = $json_response['payer'];
-            // $ip = $json_response['optional']['ip'];
-            // $mac = $json_response['optional']['mac'];
+            $myData = [
+            'flow_order' => $json_response['flowOrder'],
+            'commerceOrder' => $json_response['commerceOrder'],
+            'requestDate' => $json_response['requestDate'],
+            'status' => $json_response['status'],
+            'subject' => $json_response['subject'],
+            'currency' => $json_response['currency'],
+            'amount' => $json_response['amount'],
+            'payer' => $json_response['payer'],
+            'ip' => $json_response['optional']['ip'],
+            'mac' => $json_response['optional']['mac']
+            ];
+          
             
         } catch (Exception $e) {
             echo 'Error: ' . $e->getCode() . ' - ' . $e->getMessage();
         }
 
-        return view('confirmation', $json_response );
+        return view('confirmation', $myData );
     }
 }

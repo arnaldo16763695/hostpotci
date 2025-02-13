@@ -10,16 +10,16 @@
         <div class="card shadow-lg rounded">
             <div class="card-body p-4">
                 <ol>
-                    <li><?= $json_response['flow_order'] ?></li>
-                    <li><?= $json_response['commerceOrder'] ?></li>
-                    <li><?= $json_response['requestDate']  ?></li>
-                    <li><?= $json_response['status'] ?></li>
-                    <li><?= $json_response['subject'] ?></li>
-                    <li><?= $json_response['currency'] ?></li>
-                    <li><?= $json_response['amount'] ?></li>
-                    <li><?= $json_response['payer'] ?></li>
-                    <li><?= $json_response['optional']['ip'] ?></li>
-                    <li><?= $json_response['optional']['mac'] ?></li>
+                    <li><?= $myData['flow_order'] ?></li>
+                    <li><?= $myData['commerceOrder'] ?></li>
+                    <li><?= $myData['requestDate']  ?></li>
+                    <li><?= $myData['status'] ?></li>
+                    <li><?= $myData['subject'] ?></li>
+                    <li><?= $myData['currency'] ?></li>
+                    <li><?= $myData['amount'] ?></li>
+                    <li><?= $myData['payer'] ?></li>
+                    <li><?= $myData['ip'] ?></li>
+                    <li><?= $myData['mac'] ?></li>
 
                 </ol>
 
