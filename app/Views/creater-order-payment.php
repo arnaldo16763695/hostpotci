@@ -10,7 +10,7 @@
         <div class="card shadow-lg rounded">
             <div class="card-body p-4">
                 <div class="pb-4">
-                    <img src="../../public/images/Logo Global-n.png" alt="Logo Globalsi" width="100" height="45">
+                    <img src="<?= base_url('images/LogoGlobal-n.png')?>" alt="Logo Globalsi" width="100" height="45">
                 </div>
                 <h5 class="card-title text-center fw-bold ">Selecciona el tiempo de Internet que deseas.</h5>
                 <form action="<?= base_url('createOrder') ?>" method="POST">
