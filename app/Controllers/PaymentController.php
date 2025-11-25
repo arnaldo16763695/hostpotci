@@ -126,51 +126,58 @@ class PaymentController extends BaseController
                 throw new Exception('Failed to initialize cURL');
             }
 
-            // Configura las opciones de cURL
             curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-            curl_setopt($ch, CURLOPT_POST, TRUE);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
 
-            // Ejecuta la solicitud
             $response = curl_exec($ch);
+
             if ($response === false) {
                 $error = curl_error($ch);
                 throw new Exception('cURL error: ' . $error, curl_errno($ch));
             }
 
-            // Obtiene la información de la respuesta
             $info = curl_getinfo($ch);
+            $httpCode = (int) $info['http_code'];
 
-            // Verifica el código de estado HTTP
-            if (!in_array($info['http_code'], array('200', '400', '401'))) {
-                throw new Exception('Unexpected HTTP code: ' . $info['http_code'], $info['http_code']);
-            }
-
-            // Cierra la conexión cURL
             curl_close($ch);
 
-            // Decodifica el JSON recibido
+            // Decodificar SIEMPRE como JSON
             $data = json_decode($response, true);
+
             if ($data === null) {
-                throw new \Exception('Error decoding JSON response');
+                // Loguea la respuesta raw para saber qué llegó
+                log_message('error', 'Flow createOrder - respuesta no JSON: ' . $response);
+                throw new Exception('Error decoding JSON response: ' . json_last_error_msg());
             }
 
-            // Verificar que vengan url y token en la respuesta
+            // Si el código HTTP NO es 200, asumimos error de Flow
+            if ($httpCode !== 200) {
+                // Muchos servicios de Flow responden algo tipo {"code":123,"message":"firma inválida"}
+                $flowCode = $data['code'] ?? null;
+                $flowMessage = $data['message'] ?? 'Error desconocido de Flow';
+
+                log_message(
+                    'error',
+                    "Flow createOrder - HTTP $httpCode - code: {$flowCode} - message: {$flowMessage} - response: " . $response
+                );
+
+                throw new Exception("Flow API error ($httpCode): {$flowMessage}", $httpCode);
+            }
+
+            // En 200 DEBE venir url y token
             if (!isset($data['url'], $data['token'])) {
-                // Loguea la respuesta para ver qué está devolviendo la API
-                log_message('error', 'Respuesta inesperada de Flow: ' . $response);
-
-                throw new \Exception('La API no devolvió url/token. Respuesta inesperada.');
+                log_message('error', 'Flow createOrder - faltan url/token en respuesta 200: ' . $response);
+                throw new Exception('La API no devolvió url/token en respuesta 200');
             }
 
-            // Construye la URL final
-            $finalUrl = $data['url'] . "?token=" . urlencode($data['token']);
+            $finalUrl = $data['url'] . '?token=' . urlencode($data['token']);
 
-            // Redirige al usuario usando CodeIgniter 4
             return redirect()->to($finalUrl);
         } catch (Exception $e) {
-            // Manejo de errores
+            // Aquí puedes devolver una vista amigable en lugar de echo
+            log_message('error', 'Error en createOrder: ' . $e->getCode() . ' - ' . $e->getMessage());
             echo 'Error: ' . $e->getCode() . ' - ' . $e->getMessage();
         }
     }
@@ -348,23 +355,21 @@ class PaymentController extends BaseController
             $json_response = json_decode($response, true);
 
             $myData = [
-            'flow_order' => $json_response['flowOrder'],
-            'commerceOrder' => $json_response['commerceOrder'],
-            'requestDate' => $json_response['requestDate'],
-            'status' => $json_response['status'],
-            'subject' => $json_response['subject'],
-            'currency' => $json_response['currency'],
-            'amount' => $json_response['amount'],
-            'payer' => $json_response['payer'],
-            'ip' => $json_response['optional']['ip'],
-            'mac' => $json_response['optional']['mac']
+                'flow_order' => $json_response['flowOrder'],
+                'commerceOrder' => $json_response['commerceOrder'],
+                'requestDate' => $json_response['requestDate'],
+                'status' => $json_response['status'],
+                'subject' => $json_response['subject'],
+                'currency' => $json_response['currency'],
+                'amount' => $json_response['amount'],
+                'payer' => $json_response['payer'],
+                'ip' => $json_response['optional']['ip'],
+                'mac' => $json_response['optional']['mac']
             ];
-          
-            
         } catch (Exception $e) {
             echo 'Error: ' . $e->getCode() . ' - ' . $e->getMessage();
         }
 
-        return view('confirmation', $myData );
+        return view('confirmation', $myData);
     }
 }
