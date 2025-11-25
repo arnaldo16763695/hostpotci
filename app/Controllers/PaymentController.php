@@ -159,6 +159,14 @@ class PaymentController extends BaseController
                 throw new \Exception('Error decoding JSON response');
             }
 
+            // Verificar que vengan url y token en la respuesta
+            if (!isset($data['url'], $data['token'])) {
+                // Loguea la respuesta para ver qué está devolviendo la API
+                log_message('error', 'Respuesta inesperada de Flow: ' . $response);
+
+                throw new \Exception('La API no devolvió url/token. Respuesta inesperada.');
+            }
+
             // Construye la URL final
             $finalUrl = $data['url'] . "?token=" . urlencode($data['token']);
 
