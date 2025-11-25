@@ -29,8 +29,7 @@ class PaymentController extends BaseController
             return;
         }
 
-        // we create the database instance
-        $orderM = new OrdersModel();
+
 
         // we obtain the post variables
         $post = $this->request->getPost(['mac', 'ip', 'email', 'plan']);
@@ -68,8 +67,12 @@ class PaymentController extends BaseController
         $urlReturn = env('urlReturn');
         // $s = 'la firma de los parámetros efectuada con su secretKey';
 
+
+        $codeOrder = 'HOTSPOT-' . date('Ymd-His') . '-' . random_int(1000, 9999);
+
         // data to create order
         $data = [
+            'codeOrder' => $codeOrder,
             'amount' => $amount,
             'mac' => $post['mac'],
             'ip' => $post['ip'],
@@ -77,12 +80,13 @@ class PaymentController extends BaseController
         ];
 
 
-        // we should get it from database
+        // insert en BD
+        $orderM = new OrdersModel();
         $idOrder = $orderM->insert($data);
         $lastOrder = $orderM->find($idOrder);
 
-        //this is the commerceOrder to use in api
-        $commerceOrder = $lastOrder['codeOrder'];
+        // commerceOrder que se usa en Flow
+        $commerceOrder = $lastOrder['codeOrder'];   // o directamente $codeOrder
 
         $params = array(
             "apiKey" => $apikey,
