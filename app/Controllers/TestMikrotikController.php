@@ -62,7 +62,7 @@ class TestMikrotikController extends BaseController
                 break;
         }
 
-        echo 'ip router: '.$ip.'  mac : '.$post['mac'].'  usuario log: '.$userLog.'  username mikrotik: '. $username. ' '.'password: '.$password. ' ip cliente: '. $post['ip'];  
+        // echo 'ip router: '.$ip.'  mac : '.$post['mac'].'  usuario log: '.$userLog.'  username mikrotik: '. $username. ' '.'password: '.$password. ' ip cliente: '. $post['ip'];  
 
 
         if ($API->connect($ip, $username, $password)) {
@@ -73,6 +73,8 @@ class TestMikrotikController extends BaseController
                 'ip'     => $post['ip'], // Dirección IP del cliente
                 // 'server'      => 'hotspot1', // Nombre del servidor Hotspot
             ]);
+        }else{
+            echo 'no se logra conectar al mikrotik';
         }
 
         if (isset($mkconnec['!trap'])) {
