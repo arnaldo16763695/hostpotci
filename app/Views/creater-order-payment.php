@@ -13,7 +13,7 @@
                     <img src="<?= base_url('images/LogoGlobal-n.png')?>" alt="Logo Globalsi" width="100" height="45">
                 </div>
                 <h5 class="card-title text-center fw-bold ">Selecciona el tiempo de Internet que deseas.</h5>
-                <form action="<?= base_url('logmikrotik') ?>" method="POST">
+                <form action="<?= base_url('createOrder') ?>" method="POST">
                     <?= csrf_field(); ?>
                     <div class="mb-3  p-4">
                         <div class="mb-3">
