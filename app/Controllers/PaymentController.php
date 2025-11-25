@@ -39,11 +39,8 @@ class PaymentController extends BaseController
 
         $url = env('url_apiflow');
         $url = $url . '/payment/create';
-
         $secretKey = env('secretKey');
         $apikey = env('apikey');
-
-
         $textPlan = '';
         if ($post['plan'] === '1000') {
             $textPlan = '1 hora';
