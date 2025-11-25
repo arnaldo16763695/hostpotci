@@ -221,31 +221,7 @@ class PaymentController extends BaseController
         $url = $url . "?" . http_build_query($params);
 
         try {
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            $response = curl_exec($ch);
-
-            if ($response === false) {
-                $error = curl_error($ch);
-                throw new Exception($error, 1);
-            }
-
-            $info = curl_getinfo($ch);
-            if (!in_array((string)$info['http_code'], ['200', '400', '401'])) {
-                throw new Exception(
-                    'Unexpected error occurred. HTTP_CODE: ' . $info['http_code'],
-                    (int)$info['http_code']
-                );
-            }
-
-            curl_close($ch);
-
-            $json_response = json_decode($response, true);
-            if ($json_response === null) {
-                log_message('error', 'getstatuspayment - JSON inválido: ' . $response);
-                throw new Exception('Error decoding JSON response');
-            }
+            $json_response = $this->callFlowGetStatus($token);
 
             $status  = (int) ($json_response['status'] ?? 0);
             $amount  = $json_response['amount']        ?? null;
@@ -363,31 +339,7 @@ class PaymentController extends BaseController
         $url = $url . "?" . http_build_query($params);
 
         try {
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            $response = curl_exec($ch);
-
-            if ($response === false) {
-                $error = curl_error($ch);
-                throw new Exception($error, 1);
-            }
-
-            $info = curl_getinfo($ch);
-            if (!in_array((string)$info['http_code'], ['200', '400', '401'])) {
-                throw new Exception(
-                    'Unexpected error occurred. HTTP_CODE: ' . $info['http_code'],
-                    (int)$info['http_code']
-                );
-            }
-
-            curl_close($ch);
-
-            $json_response = json_decode($response, true);
-            if ($json_response === null) {
-                log_message('error', 'Flow confirmation - JSON inválido: ' . $response);
-                throw new Exception('Error decoding JSON response');
-            }
+            $json_response = $this->callFlowGetStatus($token);
 
             // Si el pago está PAGADO (status 2), aquí hacemos TODO:
             if ((int)$json_response['status'] === 2) {
@@ -459,5 +411,56 @@ class PaymentController extends BaseController
                 ->setStatusCode(500)
                 ->setBody('Error: ' . $e->getCode() . ' - ' . $e->getMessage());
         }
+    }
+
+      private function callFlowGetStatus(string $token): array
+    {
+        $url = env('url_apiflow') . '/payment/getStatus';
+
+        $params = [
+            'apiKey' => env('apikey'),
+            'token'  => $token,
+        ];
+
+        $keys = array_keys($params);
+        sort($keys);
+
+        $toSign = '';
+        foreach ($keys as $key) {
+            $toSign .= $key . $params[$key];
+        }
+
+        $params['s'] = hash_hmac('sha256', $toSign, env('secretKey'));
+
+        $url = $url . '?' . http_build_query($params);
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec($ch);
+
+        if ($response === false) {
+            $error = curl_error($ch);
+            curl_close($ch);
+            throw new Exception($error, 1);
+        }
+
+        $info = curl_getinfo($ch);
+        curl_close($ch);
+
+        if (!in_array((string)$info['http_code'], ['200', '400', '401'])) {
+            throw new Exception(
+                'Unexpected error occurred. HTTP_CODE: ' . $info['http_code'],
+                (int)$info['http_code']
+            );
+        }
+
+        $json = json_decode($response, true);
+        if ($json === null) {
+            log_message('error', 'Flow getStatus - JSON inválido: ' . $response);
+            throw new Exception('Error decoding JSON response');
+        }
+
+        return $json;
     }
 }
