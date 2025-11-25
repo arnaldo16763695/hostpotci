@@ -1,43 +1,102 @@
 <?= $this->extend('layout/template'); ?>
 
-
 <?= $this->section('content'); ?>
 
-<div class="row align-items-center justify-content-center min-vh-100 ">
-    <div class="col col-12 col-md-5 col-lg-4 ">
-        <div class="card shadow-lg rounded">
-            <div class="card-body p-4">
-                <h1 class='fs-4'>Bienvenido <?php if (esc($status) === 2) {
-                                                echo 'puede conectarse a Internet';
-                                            } elseif (esc($status) === 3) {
-                                                echo 'El pago ha sido rechazado';
-                                            } elseif (esc($status) === 4) {
-                                                echo 'El pago ha sido anulado';
-                                            } elseif (esc($status) === 1) {
-                                                echo 'El pago está pendiente';
-                                            } ?></h1>
-                <h3 class='fs-6'>Datos de tu orden, tambien puedes visualizarlo en tu correo:</h3>
-                <ul>
-                    <li><span class="fw-bold">Nº orden: </span><?= esc($flow_order) ?></li>
-                    <li><span class="fw-bold">Fecha: </span><?= esc($requestDate)  ?></li>
-                    <li><span class="fw-bold">Status:</span><?= esc($status) === 2 ? 'Pagada' : '' ?></li>
-                    <li><span class="fw-bold">Asunto: </span><?= esc($subject) ?></li>
-                    <li><span class="fw-bold">Moneda</span><?= esc($currency) ?></li>
-                    <li><span class="fw-bold">Cantidad:</span><?= esc($amount) ?></li>
-                    <li><span class="fw-bold">Su email:</span><?= esc($payer) ?></li>
-                    <li><span class="fw-bold">Su IP: </span><?= esc($ip) ?></li>
-                    <li><span class="fw-bold">Su MAC: </span><?= esc($mac) ?></li>
-                </ul>
-                <?php
-                if (esc($status) === 2) {
-                ?>
-                    <button type="button" onclick="window.location.href='https://www.google.com'" class="btn btn-primary">Continuar</button>
-                <?php
-                }
-                ?>
+<div class="container py-4 py-md-5">
+    <div class="row justify-content-center align-items-center min-vh-100">
+        <div class="col-12 col-md-8 col-lg-5">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-4 p-md-5">
 
+                    <h1 class="h4 mb-2 text-center">¡Bienvenido!</h1>
+                    <p class="text-muted text-center mb-4">
+                        Estos son los datos de tu orden. También puedes revisar esta información en tu correo.
+                    </p>
+
+                    <?php
+                        // Normalizamos el status a entero para evitar problemas de comparación
+                        $statusInt = (int) ($status ?? 0);
+
+                        // Texto del estado
+                        $statusText = 'Desconocido';
+                        $statusBadgeClass = 'badge-secondary';
+
+                        switch ($statusInt) {
+                            case 1:
+                                $statusText = 'Pendiente';
+                                $statusBadgeClass = 'badge-warning';
+                                break;
+                            case 2:
+                                $statusText = 'Pagada';
+                                $statusBadgeClass = 'badge-success';
+                                break;
+                            case 3:
+                                $statusText = 'Rechazada';
+                                $statusBadgeClass = 'badge-danger';
+                                break;
+                            case 4:
+                                $statusText = 'Anulada';
+                                $statusBadgeClass = 'badge-dark';
+                                break;
+                        }
+                    ?>
+
+                    <ul class="list-group mb-4">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span class="font-weight-bold">Nº orden:</span>
+                            <span><?= esc($flow_order) ?></span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span class="font-weight-bold">Fecha:</span>
+                            <span><?= esc($requestDate) ?></span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span class="font-weight-bold">Estado:</span>
+                            <span class="badge <?= $statusBadgeClass ?> px-3 py-1">
+                                <?= esc($statusText) ?>
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span class="font-weight-bold">Asunto:</span>
+                            <span class="text-right"><?= esc($subject) ?></span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span class="font-weight-bold">Moneda:</span>
+                            <span><?= esc($currency) ?></span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span class="font-weight-bold">Monto:</span>
+                            <span><?= esc($amount) ?></span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span class="font-weight-bold">Email:</span>
+                            <span class="text-right"><?= esc($payer) ?></span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span class="font-weight-bold">IP:</span>
+                            <span><?= esc($ip) ?></span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span class="font-weight-bold">MAC:</span>
+                            <span class="text-monospace"><?= esc($mac) ?></span>
+                        </li>
+                    </ul>
+
+                    <?php if ($statusInt === 2): ?>
+                        <button
+                            type="button"
+                            class="btn btn-primary btn-block"
+                            onclick="window.location.href='https://www.google.com'">
+                            Continuar a Internet
+                        </button>
+                    <?php else: ?>
+                        <div class="alert alert-info text-center mb-0">
+                            Cuando el pago sea confirmado, podrás continuar a Internet.
+                        </div>
+                    <?php endif; ?>
+
+                </div>
             </div>
-
         </div>
     </div>
 </div>

@@ -188,69 +188,229 @@ class PaymentController extends BaseController
 
     public function getstatuspayment()
     {
-        $url = env('url_apiflow');
-        $url = $url . '/payment/getStatus';
+        $url = env('url_apiflow') . '/payment/getStatus';
 
-        //obtaining post variable
-        $post = $this->request->getPost();
-        // echo print_r($post);
+        // Flow normalmente manda el token a la urlReturn
+        $token = $this->request->getPost('token') ?? $this->request->getGet('token') ?? null;
 
-        $params = array(
+        if (!$token) {
+            log_message('error', 'getstatuspayment sin token');
+            return $this->response
+                ->setStatusCode(400)
+                ->setBody('Falta el token de pago.');
+        }
+
+        $params = [
             "apiKey" => env('apikey'),
-            "token" => $post['token']
-        );
+            "token"  => $token,
+        ];
 
-        //order my keys
+        // Ordenar las keys
         $keys = array_keys($params);
         sort($keys);
 
-        //concatenation 
-        $toSign = "";
+        // Concatenación para la firma
+        $toSign = '';
         foreach ($keys as $key) {
             $toSign .= $key . $params[$key];
-        };
+        }
 
         $signature = hash_hmac('sha256', $toSign, env('secretKey'));
-
-        // agrega la firma a los parámetros
         $params["s"] = $signature;
 
         $url = $url . "?" . http_build_query($params);
+
         try {
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             $response = curl_exec($ch);
+
             if ($response === false) {
                 $error = curl_error($ch);
                 throw new Exception($error, 1);
             }
+
             $info = curl_getinfo($ch);
-            if (!in_array($info['http_code'], array('200', '400', '401'))) {
-                throw new Exception('Unexpected error occurred. HTTP_CODE: ' . $info['http_code'], $info['http_code']);
+            if (!in_array((string)$info['http_code'], ['200', '400', '401'])) {
+                throw new Exception(
+                    'Unexpected error occurred. HTTP_CODE: ' . $info['http_code'],
+                    (int)$info['http_code']
+                );
             }
 
+            curl_close($ch);
+
             $json_response = json_decode($response, true);
+            if ($json_response === null) {
+                log_message('error', 'getstatuspayment - JSON inválido: ' . $response);
+                throw new Exception('Error decoding JSON response');
+            }
 
-            // echo json_encode($response);exit;
+            $status  = (int) ($json_response['status'] ?? 0);
+            $amount  = $json_response['amount']        ?? null;
+            $subject = $json_response['subject']       ?? '';
+            $payer   = $json_response['payer']         ?? '';
+            $commerceOrder = $json_response['commerceOrder'] ?? null;
 
-            //logic to connecte to mikrotik
-            if ($json_response['status'] === 2) {
+            // Puedes leer tu BD si quieres confirmar:
+            // $orderM = new OrdersModel();
+            // $order  = $orderM->where('codeOrder', $commerceOrder)->first();       
 
+            switch ($status) {
+                case 2: // PAGADO
+                    // En teoría, ya está logueado por confirmation().
+                    // Aquí solo UX: redirigir o mostrar vista.
+                    $myData = [
+                        'flow_order'    => $json_response['flowOrder']      ?? null,
+                        'commerceOrder' => $json_response['commerceOrder']  ?? null,
+                        'requestDate'   => $json_response['requestDate']    ?? null,
+                        'status'        => $json_response['status']         ?? null,
+                        'subject'       => $json_response['subject']        ?? null,
+                        'currency'      => $json_response['currency']       ?? null,
+                        'amount'        => $json_response['amount']         ?? null,
+                        'payer'         => $json_response['payer']          ?? null,
+                        'ip'            => $json_response['optional']['ip'] ?? null,
+                        'mac'           => $json_response['optional']['mac'] ?? null,
+                    ];
+
+                    // En este punto, confirmation() (el endpoint de Flow) ya debió haber
+                    // actualizado la BD y logueado al usuario en Mikrotik.
+                    // Aquí solo mostramos la vista bonita.
+                    return view('confirmation', $myData);
+
+                case 3: // RECHAZADO
+                    return view('payment_result', [
+                        'status'  => 'rejected',
+                        'title'   => 'Pago rechazado',
+                        'message' => 'El pago ha sido rechazado. Por favor, intente nuevamente.',
+                        'amount'  => $amount,
+                        'subject' => $subject,
+                        'payer'   => $payer,
+                    ]);
+
+                case 4: // ANULADO
+                    return view('payment_result', [
+                        'status'  => 'canceled',
+                        'title'   => 'Pago anulado',
+                        'message' => 'El pago ha sido anulado. Si no reconoce esta operación, contacte soporte.',
+                        'amount'  => $amount,
+                        'subject' => $subject,
+                        'payer'   => $payer,
+                    ]);
+
+                case 1: // PENDIENTE
+                    return view('payment_result', [
+                        'status'  => 'pending',
+                        'title'   => 'Pago pendiente',
+                        'message' => 'El pago está pendiente. Si ya completó el proceso, espere unos segundos y recargue la página.',
+                        'amount'  => $amount,
+                        'subject' => $subject,
+                        'payer'   => $payer,
+                    ]);
+
+                default:
+                    return view('payment_result', [
+                        'status'  => 'unknown',
+                        'title'   => 'Estado desconocido',
+                        'message' => 'No pudimos determinar el estado del pago. Si el problema persiste, contacte soporte.',
+                        'amount'  => $amount,
+                        'subject' => $subject,
+                        'payer'   => $payer,
+                    ]);
+            }
+        } catch (Exception $e) {
+            log_message('error', 'Error en getstatuspayment: ' . $e->getCode() . ' - ' . $e->getMessage());
+            return $this->response
+                ->setStatusCode(500)
+                ->setBody('Error: ' . $e->getCode() . ' - ' . $e->getMessage());
+        }
+    }
+
+
+
+    public function confirmation()
+    {
+        $url = env('url_apiflow') . '/payment/getStatus';
+
+        // Flow suele mandar el token por POST (pero dejamos GET por si pruebas a mano)
+        $post = $this->request->getPost();
+        $token = $post['token'] ?? $this->request->getGet('token') ?? null;
+
+        if (!$token) {
+            log_message('error', 'Flow confirmation sin token');
+            return $this->response->setStatusCode(400)->setBody('Missing token');
+        }
+
+        $params = [
+            "apiKey" => env('apikey'),
+            "token"  => $token,
+        ];
+
+        // Ordenar keys
+        $keys = array_keys($params);
+        sort($keys);
+
+        // Concatenar para firmar
+        $toSign = "";
+        foreach ($keys as $key) {
+            $toSign .= $key . $params[$key];
+        }
+
+        $signature = hash_hmac('sha256', $toSign, env('secretKey'));
+        $params["s"] = $signature;
+
+        $url = $url . "?" . http_build_query($params);
+
+        try {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $response = curl_exec($ch);
+
+            if ($response === false) {
+                $error = curl_error($ch);
+                throw new Exception($error, 1);
+            }
+
+            $info = curl_getinfo($ch);
+            if (!in_array((string)$info['http_code'], ['200', '400', '401'])) {
+                throw new Exception(
+                    'Unexpected error occurred. HTTP_CODE: ' . $info['http_code'],
+                    (int)$info['http_code']
+                );
+            }
+
+            curl_close($ch);
+
+            $json_response = json_decode($response, true);
+            if ($json_response === null) {
+                log_message('error', 'Flow confirmation - JSON inválido: ' . $response);
+                throw new Exception('Error decoding JSON response');
+            }
+
+            // Si el pago está PAGADO (status 2), aquí hacemos TODO:
+            if ((int)$json_response['status'] === 2) {
                 $orderM = new OrdersModel();
 
+                // Actualizar la orden en tu BD
                 $orderM->where('codeOrder', $json_response['commerceOrder'])
-                    ->set(['status' => 'PAGADA', 'email' => $json_response['payer']])
+                    ->set([
+                        'status' => 'PAGADA',
+                        'email'  => $json_response['payer'],
+                    ])
                     ->update();
 
-
-                $ip = env('ip_mikrotik');
+                // ----- Login en Mikrotik -----
+                $ip       = env('ip_mikrotik');
                 $username = env('username_mikrotik');
                 $password = env('password_mikrotik');
-                $port = env('port_mikrotik');
-                $API = new RouterosAPI();
+                $port     = env('port_mikrotik');
+
+                $API        = new RouterosAPI();
                 $API->debug = false;
-                $API->port = $port;
+                $API->port  = $port;
+
                 $userLog = '';
                 $users = [
                     'user_1000',
@@ -261,119 +421,43 @@ class PaymentController extends BaseController
 
                 switch ($json_response['amount']) {
                     case '1000':
-                        # loguear al usuario por 1 hora
                         $userLog = $users[0];
                         break;
-
                     case '3000':
-                        # loguear al usuario por 2 días
                         $userLog = $users[1];
                         break;
-
                     case '5000':
-                        # loguear al usuario por 7 días
                         $userLog = $users[2];
                         break;
                     case '10000':
-                        # loguear al usuario por 7 días
                         $userLog = $users[3];
                         break;
                 }
 
+                $mkconnec = [];
+
                 if ($API->connect($ip, $username, $password)) {
                     $mkconnec = $API->comm('/ip/hotspot/active/login', [
-                        'user' => $userLog,
-                        'password' => 'M0v1n3t20',
-                        'mac-address' => $json_response['optional']['mac'],
-                        'ip'     => $json_response['optional']['ip'], // Dirección IP del cliente
-                        // 'server'      => 'hotspot1', // Nombre del servidor Hotspot
+                        'user'        => $userLog,
+                        'password'    => 'M0v1n3t20',
+                        'mac-address' => $json_response['optional']['mac'] ?? null,
+                        'ip'          => $json_response['optional']['ip'] ?? null,
                     ]);
+                    $API->disconnect();
+                } else {
+                    log_message('error', 'No se pudo conectar a Mikrotik en confirmation()');
                 }
 
                 if (isset($mkconnec['!trap'])) {
-                    echo 'Error: ' . $mkconnec['!trap'][0]['message'];
+                    log_message('error', 'Error hotspot login: ' . $mkconnec['!trap'][0]['message']);
                 }
-
-                $API->disconnect(); // Desconectar de la API
-                http_response_code(200);
-            } elseif ($json_response['status'] === 3) {
-                echo  '<h2>El pago ha sido rechazado</h2>';
-            } elseif ($json_response['status'] === 4) {
-                echo  '<h2>El pago ha sido anulado</h2>';
-            } elseif ($json_response['status'] === 1) {
-                echo  '<h2>El pago esta pendiente</h2>';
             }
-            // echo $response;
+            return $this->response->setStatusCode(200)->setBody('OK');
         } catch (Exception $e) {
-            echo 'Error: ' . $e->getCode() . ' - ' . $e->getMessage();
+            log_message('error', 'Error en confirmation: ' . $e->getCode() . ' - ' . $e->getMessage());
+            return $this->response
+                ->setStatusCode(500)
+                ->setBody('Error: ' . $e->getCode() . ' - ' . $e->getMessage());
         }
-    }
-
-
-
-    public function confirmation()
-    {
-        $url = env('url_apiflow');
-        $url = $url . '/payment/getStatus';
-
-        //obtaining post variable
-        $post = $this->request->getPost();
-        // echo print_r($post);
-
-        $params = array(
-            "apiKey" => env('apikey'),
-            "token" => $post['token']
-        );
-
-        //order my keys
-        $keys = array_keys($params);
-        sort($keys);
-
-        //concatenation 
-        $toSign = "";
-        foreach ($keys as $key) {
-            $toSign .= $key . $params[$key];
-        };
-
-        $signature = hash_hmac('sha256', $toSign, env('secretKey'));
-
-        // agrega la firma a los parámetros
-        $params["s"] = $signature;
-
-        $url = $url . "?" . http_build_query($params);
-
-        try {
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-            $response = curl_exec($ch);
-            if ($response === false) {
-                $error = curl_error($ch);
-                throw new Exception($error, 1);
-            }
-            $info = curl_getinfo($ch);
-            if (!in_array($info['http_code'], array('200', '400', '401'))) {
-                throw new Exception('Unexpected error occurred. HTTP_CODE: ' . $info['http_code'], $info['http_code']);
-            }
-
-            $json_response = json_decode($response, true);
-
-            $myData = [
-                'flow_order' => $json_response['flowOrder'],
-                'commerceOrder' => $json_response['commerceOrder'],
-                'requestDate' => $json_response['requestDate'],
-                'status' => $json_response['status'],
-                'subject' => $json_response['subject'],
-                'currency' => $json_response['currency'],
-                'amount' => $json_response['amount'],
-                'payer' => $json_response['payer'],
-                'ip' => $json_response['optional']['ip'],
-                'mac' => $json_response['optional']['mac']
-            ];
-        } catch (Exception $e) {
-            echo 'Error: ' . $e->getCode() . ' - ' . $e->getMessage();
-        }
-
-        return view('confirmation', $myData);
     }
 }
