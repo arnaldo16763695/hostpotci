@@ -122,7 +122,7 @@ class UsersController extends BaseController
 ';
         $email = service('email');
         // $email->setFrom('transferencias@movinet.cl', 'Your Name');
-        $email->setTo('arnaldoespinoza1@hotmail.com');
+        $email->setTo(env('setToEmail')); 
         // $email->setCC('aespinoza@globalsi.cl');
         // $email->setBCC('them@their-example.com');
 
