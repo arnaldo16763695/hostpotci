@@ -56,7 +56,9 @@
 
                 </form>
                 <div class="mb-3 mt-3 d-flex justify-content-center">
-                    <a id="transference" href="<?= base_url(); ?>contact-transference?mac=<?= $_POST['mac'] ?>&plan=3000" class="">Pagar por transferencia</a>
+                    <a id="transference" href="<?= base_url('contact-transference'); ?>" class="">
+                        Pagar por transferencia
+                    </a>
                 </div>
                 <?php if (session()->getFlashdata('errors') !== null): ?>
                     <div class="alert alert-danger my-3" role="alert">
