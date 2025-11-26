@@ -28,7 +28,7 @@
                 <div class="mb-3">
                     <label class="mb-2" for="phone">Telefono</label>
                     <input type="text" class="form-control" name="phone" id="phone" value="" required>
-                    <input type="hidden" class="form-control" name="mac" id="mac" value="<?= '00:15:5D:34:5E:00';  ?>">
+                    <input type="hidden" class="form-control" name="mac" id="mac" value="<?= $mac  ?>">
                 </div>
                 <div class="d-flex flex-column  ">
 
