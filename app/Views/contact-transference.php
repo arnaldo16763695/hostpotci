@@ -12,7 +12,7 @@
                     <form method="POST" action="<?= base_url('sendNotification') ?>" autocomplete="off">
                         <?= csrf_field(); ?>
 
-                        <div class="form-group">
+                        <div class="form-group mb-4">
                             <label for="name">Nombre</label>
                             <input
                                 type="text"
@@ -21,10 +21,11 @@
                                 id="name"
                                 value=""
                                 autofocus
-                                required>
+                                required
+                            >
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group mb-4">
                             <label for="rut">Rut</label>
                             <input
                                 type="text"
@@ -32,10 +33,11 @@
                                 name="rut"
                                 id="rut"
                                 value=""
-                                required>
+                                required
+                            >
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group mb-4">
                             <label for="email">Correo electrónico</label>
                             <input
                                 type="email"
@@ -43,10 +45,11 @@
                                 name="email"
                                 id="email"
                                 value="<?= $email; ?>"
-                                required>
+                                required
+                            >
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group mb-4">
                             <label for="phone">Teléfono</label>
                             <input
                                 type="text"
@@ -54,23 +57,20 @@
                                 name="phone"
                                 id="phone"
                                 value=""
-                                required>
+                                required
+                            >
                             <input
                                 type="hidden"
                                 class="form-control"
                                 name="mac"
                                 id="mac"
-                                value="<?= $mac; ?>">
+                                value="<?= $mac; ?>"
+                            >
                         </div>
 
-                        <div class="d-flex flex-column">
+                        <div class="d-flex flex-column ml-3">
                             <div class="p-2 form-check">
-                                <input
-                                    class="form-check-input"
-                                    type="radio"
-                                    name="plan"
-                                    id="3000"
-                                    value="3000"
+                                <input class="form-check-input" type="radio" name="plan" id="3000" value="3000"
                                     <?php if ($plan === '3000') echo 'checked'; ?>>
                                 <label class="form-check-label" for="3000">
                                     1 Día de Internet. $3.000
@@ -78,12 +78,7 @@
                             </div>
 
                             <div class="p-2 form-check">
-                                <input
-                                    class="form-check-input"
-                                    type="radio"
-                                    name="plan"
-                                    id="5000"
-                                    value="5000"
+                                <input class="form-check-input" type="radio" name="plan" id="5000" value="5000"
                                     <?php if ($plan === '5000') echo 'checked'; ?>>
                                 <label class="form-check-label" for="5000">
                                     2 Días de Internet. $5.000
@@ -91,12 +86,7 @@
                             </div>
 
                             <div class="p-2 form-check">
-                                <input
-                                    class="form-check-input"
-                                    type="radio"
-                                    name="plan"
-                                    id="10000"
-                                    value="10000"
+                                <input class="form-check-input" type="radio" name="plan" id="10000" value="10000"
                                     <?php if ($plan === '10000') echo 'checked'; ?>>
                                 <label class="form-check-label" for="10000">
                                     7 Días de Internet. $10.000
@@ -104,12 +94,7 @@
                             </div>
 
                             <div class="p-2 form-check">
-                                <input
-                                    class="form-check-input"
-                                    type="radio"
-                                    name="plan"
-                                    id="1000"
-                                    value="1000"
+                                <input class="form-check-input" type="radio" name="plan" id="1000" value="1000"
                                     <?php if ($plan === '1000') echo 'checked'; ?>>
                                 <label class="form-check-label" for="1000">
                                     1 hora de Internet. $1.000
@@ -123,7 +108,7 @@
                             <?php endif; ?>
                         </div>
 
-                        <div class="mt-3 d-flex justify-content-end">
+                        <div class="mt-4 d-flex justify-content-end">
                             <button type="submit" class="btn btn-primary">
                                 Enviar
                             </button>
