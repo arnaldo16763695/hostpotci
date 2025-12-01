@@ -12,7 +12,7 @@ class UsersTransferenceModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['name', 'email', 'phone', 'rut'];
+    protected $allowedFields    = ['name', 'email', 'phone', 'rut','plan'];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;

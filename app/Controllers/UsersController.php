@@ -89,7 +89,8 @@ class UsersController extends BaseController
             'name',
             'email',
             'phone',
-            'rut'
+            'rut',
+            'plan'
         ]);
 
         // save in db
