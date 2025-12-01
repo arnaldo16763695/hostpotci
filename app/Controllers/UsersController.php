@@ -2,6 +2,8 @@
 
 namespace App\Controllers;
 
+use App\Models\UsersTransferenceModel;
+
 class UsersController extends BaseController
 {
     protected $helpers = ['form'];
@@ -73,12 +75,27 @@ class UsersController extends BaseController
         ];
 
 
+
+
+
         if (!$this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->listErrors());
         }
 
 
         $post = $this->request->getPost();
+
+        $data = $this->request->getPost([
+            'name',
+            'email',
+            'phone',
+            'rut'
+        ]);
+
+        // save in db
+        $userTM = new UsersTransferenceModel();
+        $userTM->insert($data);
+
 
         // Eliminar el campo que NO quieres enviar
         unset($post['csrf_test_name']);
@@ -122,7 +139,7 @@ class UsersController extends BaseController
 ';
         $email = service('email');
         // $email->setFrom('transferencias@movinet.cl', 'Your Name');
-        $email->setTo(env('setToEmail')); 
+        $email->setTo(env('setToEmail'));
         // $email->setCC('aespinoza@globalsi.cl');
         // $email->setBCC('them@their-example.com');
 
