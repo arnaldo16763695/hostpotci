@@ -90,7 +90,9 @@ class UsersController extends BaseController
             'email',
             'phone',
             'rut',
-            'plan'
+            'plan',
+            'ip',
+            'mac'
         ]);
 
         // save in db
