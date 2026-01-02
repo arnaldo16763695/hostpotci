@@ -33,15 +33,13 @@ class UsersController extends BaseController
                     'alpha_space' => 'El nombre solo puede contener letras y espacios.',
                 ]
             ],
-
             'rut' => [
-                'rules' => 'required|min_length[7]|max_length[12]', // ideal validarlo con función personalizada
+                'rules' => 'required|min_length[7]|max_length[12]',
                 'errors' => [
                     'required'   => 'El RUT es obligatorio.',
                     'min_length' => 'El RUT parece demasiado corto.',
                 ]
             ],
-
             'email' => [
                 'rules' => 'required|valid_email|max_length[100]',
                 'errors' => [
@@ -49,22 +47,19 @@ class UsersController extends BaseController
                     'valid_email' => 'Debe ingresar un email válido.',
                 ]
             ],
-
             'phone' => [
                 'rules' => 'required|min_length[8]|max_length[12]',
                 'errors' => [
-                    'required'  => 'El teléfono es obligatorio.',
+                    'required'   => 'El teléfono es obligatorio.',
                     'min_length' => 'Debe ingresar al menos 8 dígitos.',
                 ]
             ],
-
             'plan' => [
                 'rules' => 'required',
                 'errors' => [
                     'required' => 'Debe seleccionar un plan.',
                 ]
             ],
-
             'mac' => [
                 'rules' => 'required|max_length[50]|regex_match[/^([A-Fa-f0-9]{2}:){5}[A-Fa-f0-9]{2}$/]',
                 'errors' => [
@@ -74,14 +69,9 @@ class UsersController extends BaseController
             ],
         ];
 
-
-
-
-
         if (!$this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->listErrors());
         }
-
 
         $post = $this->request->getPost();
 
@@ -99,73 +89,112 @@ class UsersController extends BaseController
         $userTM = new UsersTransferenceModel();
         $userTM->insert($data);
 
-
-        // Eliminar el campo que NO quieres enviar
+        // Remove CSRF field from email table
         unset($post['csrf_test_name']);
 
-        // Mensaje inicial + tabla
+        // Build email HTML message (your same logic)
         $message = '
-<p style="font-family: Arial, sans-serif; font-size: 15px; color: #333;">
-    Hola, estoy escribiendo para solicitar una <strong>conexión a Internet</strong>. 
-    Estos son mis datos:
-</p>
+    <p style="font-family: Arial, sans-serif; font-size: 15px; color: #333;">
+        Hola, estoy escribiendo para solicitar una <strong>conexión a Internet</strong>. 
+        Estos son mis datos:
+    </p>
 
-<table cellpadding="10" cellspacing="0" width="100%" 
-       style="border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px;">
+    <table cellpadding="10" cellspacing="0" width="100%" 
+        style="border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px;">
 
-    <thead>
-        <tr style="background-color: #004aad; color: #fff; text-align: left;">
-            <th style="padding: 10px; width: 30%;">Campo</th>
-            <th style="padding: 10px;">Valor</th>
-        </tr>
-    </thead>
+        <thead>
+            <tr style="background-color: #004aad; color: #fff; text-align: left;">
+                <th style="padding: 10px; width: 30%;">Campo</th>
+                <th style="padding: 10px;">Valor</th>
+            </tr>
+        </thead>
 
-    <tbody>
-';
+        <tbody>
+    ';
 
         foreach ($post as $key => $value) {
-
-            // convertir keys a nombres más bonitos
             $label = ucwords(str_replace('_', ' ', $key));
 
             $message .= "
-        <tr style='border-bottom: 1px solid #ddd;'>
-            <td style='font-weight: bold; padding: 8px; background:#f8f8f8;'>{$label}</td>
-            <td style='padding: 8px;'>{$value}</td>
-        </tr>
-    ";
+            <tr style='border-bottom: 1px solid #ddd;'>
+                <td style='font-weight: bold; padding: 8px; background:#f8f8f8;'>{$label}</td>
+                <td style='padding: 8px;'>{$value}</td>
+            </tr>
+        ";
         }
 
         $message .= '
-    </tbody>
-</table>
-';
-        $email = service('email');
-        // $email->setFrom('transferencias@movinet.cl', 'Your Name');
-        $email->setTo(env('setToEmail'));
-        // $email->setCC('aespinoza@globalsi.cl');
-        // $email->setBCC('them@their-example.com');
+        </tbody>
+    </table>
+    ';
 
+        // Send email (keep your current way)
+        $email = service('email');
+        $email->setTo(env('setToEmail'));
         $email->setSubject('Deseo conectarme al hotspot');
         $email->setMessage($message);
-        if ($email->send()) {
-            // Opcional: guardar también en BD la solicitud aquí
 
+        if ($email->send()) {
+
+            // =========================
+            // Send WhatsApp (NEW BLOCK)
+            // =========================
+            try {
+                $apiUrl    = 'http://api.textmebot.com/send.php';
+                $apiKey    = env('whatsapp_api_key');
+                $recipient = env('recipient');
+
+                // Avoid variable name collision with $email service
+                $name      = $post['name']  ?? '';
+                $userEmail = $post['email'] ?? '';
+                $phone     = $post['phone'] ?? '';
+                $plan      = $post['plan']  ?? '';
+                $mac       = $post['mac']   ?? '';
+                $ip        = $post['ip']    ?? '';
+
+                $whatMessage  = "📡 *Nueva solicitud de Internet*\n\n";
+                $whatMessage .= "👤 Nombre: {$name}\n";
+                $whatMessage .= "📧 Email: {$userEmail}\n";
+                $whatMessage .= "📞 Teléfono: {$phone}\n";
+                $whatMessage .= "📦 Plan: {$plan}\n";
+                $whatMessage .= "💻 MAC: {$mac}\n";
+                if (!empty($ip)) {
+                    $whatMessage .= "🌐 IP: {$ip}\n";
+                }
+
+                $query = http_build_query([
+                    'recipient' => $recipient,
+                    'apikey'    => $apiKey,
+                    'text'      => $whatMessage,
+                ]);
+
+                $url = $apiUrl . '?' . $query;
+
+                // Fire and forget (do not block user flow)
+                $waResponse = @file_get_contents($url);
+
+                // Log response for debugging
+                log_message('info', 'WhatsApp API response: ' . ($waResponse ?? 'no-response'));
+            } catch (\Throwable $e) {
+                // Don't break the flow if WhatsApp fails
+                log_message('error', 'WhatsApp send failed: ' . $e->getMessage());
+            }
+
+            // Return success view (same as you had)
             return view('message', [
                 'title' => 'Solicitud enviada',
                 'message' => 'Hemos recibido tu solicitud para conexión a Internet. 
-                      Un asesor revisará tus datos y te contactará con las instrucciones 
-                      para realizar la transferencia.'
+                  Un asesor revisará tus datos y te contactará con las instrucciones 
+                  para realizar la transferencia.'
             ]);
         } else {
-            // Loguear el error y mostrar algo amigable
             log_message('error', $email->printDebugger(['headers', 'subject', 'body']));
 
             return view('error-correo', [
                 'title' => 'Ocurrió un problema',
                 'message' => 'No pudimos enviar tu solicitud en este momento. 
-                      Por favor, intenta nuevamente en unos minutos 
-                      o contáctanos por WhatsApp o teléfono.'
+                  Por favor, intenta nuevamente en unos minutos 
+                  o contáctanos por WhatsApp o teléfono.'
             ]);
         }
     }
