@@ -197,6 +197,10 @@ class UsersController extends BaseController
             'ip' => 'required|valid_ip',
         ];
 
+         if (!$this->validate($rules)) {
+            return redirect()->back()->withInput()->with('errors', $this->validator->listErrors());
+        }
+
         $userLog = $this->request->getPost('email');
         $passwordLog = $this->request->getPost('email'); // password will be the same email
         $ipUser = $this->request->getPost('ip'); 
@@ -228,6 +232,7 @@ class UsersController extends BaseController
 
         if (isset($mkconnec['!trap'])) {
             log_message('error', 'Error hotspot login: ' . $mkconnec['!trap'][0]['message']);
+            echo $mkconnec['!trap'];
         }
     }
 }
