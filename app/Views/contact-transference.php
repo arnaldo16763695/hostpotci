@@ -55,16 +55,9 @@
                                 class="form-control"
                                 name="phone"
                                 id="phone"
-                                value=""
+                                value="<?= $phone; ?>"
                                 required
-                            >
-                            <input
-                                type="hidden"
-                                class="form-control"
-                                name="mac"
-                                id="mac"
-                                value="<?= $mac; ?>"
-                            >
+                            >                        
                         </div>
 
                         <div class="form-group mb-4">

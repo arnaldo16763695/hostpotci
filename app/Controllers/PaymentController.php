@@ -11,17 +11,21 @@ class PaymentController extends BaseController
 
     public function index()
     {
-        return  view('creater-order-payment');
+        // return  view('creater-order-payment'); 
+        return  view('home-payment'); 
     }
 
     protected $helpers = ['form'];
+
+    public function createOrderPayment(){
+        return view('creater-order-payment');
+    }
 
     public function createOrder()
     {
         $rules = [
             'email' => 'required|max_length[100]|valid_email',
-            'mac' => 'required|max_length[50]',
-            'ip' => 'required|valid_ip[ipv4]',
+            'phone' => 'required|max_length[100]',           
         ];
 
         if (!$this->validate($rules)) {

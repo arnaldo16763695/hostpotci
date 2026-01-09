@@ -20,6 +20,10 @@
                             <label class="mb-2" for="email">Su Email:</label>
                             <input type="email" class="form-control" name="email" id="email" value="<?= set_value('email'); ?>" required autofocus>
                         </div>
+                        <div class="mb-3">
+                            <label class="mb-2" for="phone">Teléfono:</label>
+                            <input type="text" class="form-control" name="phone" id="phone"  required >
+                        </div>
                         <div class="d-flex flex-column  ">
 
                             <div class="p-2 form-check">
@@ -48,9 +52,10 @@
                             </div>
                         </div>
 
-                        <input type="hidden" class="form-control" id="ip" name="ip" value="<?= $_POST['ip'] ?>">
-                        <input type="hidden" class="form-control" id="mac" name="mac" value="<?= $_POST['mac'] ?>">
-                        <div class="mb-3 mt-3 d-flex justify-content-end">
+                        <!-- <input type="hidden" class="form-control" id="ip" name="ip" value=""> -->
+                        <!-- <input type="hidden" class="form-control" id="mac" name="mac" value=""> -->
+                        <div class="mb-3 mt-3 d-flex justify-content-between">
+                            <a href="<?=  base_url(); ?>" class="btn btn-danger">Atrás</a>
                             <button type="submit" class="btn btn-primary">Pagar con tarjeta</button>
                         </div>
 

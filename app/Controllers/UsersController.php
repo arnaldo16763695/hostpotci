@@ -12,13 +12,13 @@ class UsersController extends BaseController
 
         $email = $this->request->getGet('email');
         $plan  = $this->request->getGet('plan');
-        $mac  = $this->request->getGet('mac');
+        $phone  = $this->request->getGet('phone');
 
 
         return view('contact-transference', [
             'email' => $email,
             'plan'  => $plan,
-            'mac'  => $mac,
+            'phone'  => $phone,
         ]);
     }
 
@@ -60,13 +60,7 @@ class UsersController extends BaseController
                     'required' => 'Debe seleccionar un plan.',
                 ]
             ],
-            'mac' => [
-                'rules' => 'required|max_length[50]|regex_match[/^([A-Fa-f0-9]{2}:){5}[A-Fa-f0-9]{2}$/]',
-                'errors' => [
-                    'required'    => 'La MAC es obligatoria.',
-                    'regex_match' => 'La dirección MAC no es válida (formato correcto: XX:XX:XX:XX:XX:XX).',
-                ]
-            ],
+         
         ];
 
         if (!$this->validate($rules)) {
@@ -81,9 +75,9 @@ class UsersController extends BaseController
             'phone',
             'rut',
             'plan',
-            'ip',
-            'mac'
         ]);
+
+        // print_r($post);exit;
 
         // save in db
         $userTM = new UsersTransferenceModel();
@@ -149,18 +143,13 @@ class UsersController extends BaseController
                 $userEmail = $post['email'] ?? '';
                 $phone     = $post['phone'] ?? '';
                 $plan      = $post['plan']  ?? '';
-                $mac       = $post['mac']   ?? '';
-                $ip        = $post['ip']    ?? '';
 
                 $whatMessage  = "📡 *Nueva solicitud de Internet*\n\n";
                 $whatMessage .= "👤 Nombre: {$name}\n";
                 $whatMessage .= "📧 Email: {$userEmail}\n";
                 $whatMessage .= "📞 Teléfono: {$phone}\n";
                 $whatMessage .= "📦 Plan: {$plan}\n";
-                $whatMessage .= "💻 MAC: {$mac}\n";
-                if (!empty($ip)) {
-                    $whatMessage .= "🌐 IP: {$ip}\n";
-                }
+             
 
                 $query = http_build_query([
                     'recipient' => $recipient,
