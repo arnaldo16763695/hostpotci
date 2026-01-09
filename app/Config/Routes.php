@@ -18,7 +18,7 @@ $routes->get('/contact-transference', 'UsersController::index');
 $routes->post('sendNotification', 'UsersController::sendNotification');
 
 //loginToMikrotik
-$routes->post('/login-to-mik', 'UserController::loginToMikrotik');
+$routes->post('/login-to-mik', 'UsersController::loginToMikrotik');
 
 
 //register
