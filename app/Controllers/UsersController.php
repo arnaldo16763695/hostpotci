@@ -185,7 +185,7 @@ class UsersController extends BaseController
                 'title' => 'Solicitud enviada',
                 'message' => 'Hemos recibido tu solicitud para conexión a Internet. 
                   Un asesor revisará tus datos y te contactará con las instrucciones 
-                  para realizar la transferencia.'
+                  para realizar la transferencia. Despues debe esperar un tiempo máximo de 45 minutos.'
             ]);
         } else {
             log_message('error', $email->printDebugger(['headers', 'subject', 'body']));
