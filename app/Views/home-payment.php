@@ -22,15 +22,15 @@
                         </div>
 
 
-                        <input type="hidden" class="form-control" id="ip" name="ip" value="">
-                        <input type="hidden" class="form-control" id="mac" name="mac" value="">
+                        <input type="hidden" class="form-control" id="ip" name="ip" value="<?= $_POST['ip']; ?>">
+                        <input type="hidden" class="form-control" id="mac" name="mac" value="<?= $_POST['mac']; ?>">
                         <div class="mb-3 mt-3 d-flex justify-content-end">
                             <button type="submit" class="btn btn-primary">Conectar</button>
                         </div>
 
                 </form>
                 <div class="mb-3 mt-3 d-flex justify-content-center">
-                    <a id="transference" href="<?= base_url('create-order-payment'); ?>" class="">
+                    <a id="transference" href="<?= base_url('create-order-payment'); ?>?ip=<?= $_POST['ip']; ?>&mac=<?= $_POST['mac']; ?>" class="">
                         ¿ No estás registrado ? regístrate
                     </a>
                 </div>

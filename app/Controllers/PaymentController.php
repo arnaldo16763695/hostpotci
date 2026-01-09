@@ -12,20 +12,28 @@ class PaymentController extends BaseController
     public function index()
     {
         // return  view('creater-order-payment'); 
-        return  view('home-payment'); 
+        return  view('home-payment');
     }
 
     protected $helpers = ['form'];
 
-    public function createOrderPayment(){
-        return view('creater-order-payment');
+    public function createOrderPayment()
+    {
+        $ip = $this->request->getGet('ip');
+        $mac  = $this->request->getGet('mac');        
+        return view('creater-order-payment',[
+            'ip' => $ip,
+            'mac'  => $mac,
+        ]);
     }
 
     public function createOrder()
     {
         $rules = [
             'email' => 'required|max_length[100]|valid_email',
-            'phone' => 'required|max_length[100]',           
+            'phone' => 'required|max_length[100]',
+            'ip' => 'required|valid_ip',
+            'mac' => 'required|valid_mac',
         ];
 
         if (!$this->validate($rules)) {
@@ -417,7 +425,7 @@ class PaymentController extends BaseController
         }
     }
 
-      private function callFlowGetStatus(string $token): array
+    private function callFlowGetStatus(string $token): array
     {
         $url = env('url_apiflow') . '/payment/getStatus';
 

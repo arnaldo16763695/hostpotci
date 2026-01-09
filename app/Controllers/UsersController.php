@@ -12,7 +12,7 @@ class UsersController extends BaseController
 
         $email = $this->request->getGet('email');
         $plan  = $this->request->getGet('plan');
-        $phone  = $this->request->getGet('phone');
+        $phone  = $this->request->getGet('phone'); 
 
 
         return view('contact-transference', [

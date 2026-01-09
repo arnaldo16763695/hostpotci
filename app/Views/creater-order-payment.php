@@ -22,7 +22,7 @@
                         </div>
                         <div class="mb-3">
                             <label class="mb-2" for="phone">Teléfono:</label>
-                            <input type="text" class="form-control" name="phone" id="phone"  required >
+                            <input type="text" class="form-control" name="phone" id="phone" required>
                         </div>
                         <div class="d-flex flex-column  ">
 
@@ -55,7 +55,11 @@
                         <!-- <input type="hidden" class="form-control" id="ip" name="ip" value=""> -->
                         <!-- <input type="hidden" class="form-control" id="mac" name="mac" value=""> -->
                         <div class="mb-3 mt-3 d-flex justify-content-between">
-                            <a href="<?=  base_url(); ?>" class="btn btn-danger">Atrás</a>
+                            <form action="<?= base_url(); ?>">
+                                <input type="hidden" class="form-control" id="ip" name="ip" value="<?= $_GET['ip']; ?>">
+                                <input type="hidden" class="form-control" id="mac" name="mac" value="<?= $_GET['mac']; ?>">
+                                <button type="submit" class="btn btn-danger">Atrás</button>
+                            </form>
                             <button type="submit" class="btn btn-primary">Pagar con tarjeta</button>
                         </div>
 
