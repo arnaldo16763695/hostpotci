@@ -13,7 +13,7 @@
                     <img src="<?= base_url('images/LogoGlobal-n.png') ?>" alt="Logo Globalsi" width="100" height="45">
                 </div>
                 <!-- <h5 class="card-title text-center fw-bold ">Si ya estas registrado ingresa tu Nº de teléfono</h5> -->
-                <form action="<?= base_url('createOrder') ?>" method="POST">
+                <form action="<?= base_url('loginToMikrotik') ?>" method="POST">
                     <?= csrf_field(); ?>
                     <div class="mb-3  p-4">
                         <div class="mb-3">
@@ -28,7 +28,7 @@
                             <button type="submit" class="btn btn-primary">Conectar</button>
                         </div>
 
-                </form>
+                </form> 
                 <div class="mb-3 mt-3 d-flex justify-content-center">
                     <a id="transference" href="<?= base_url('create-order-payment'); ?>?ip=<?= $_POST['ip']; ?>&mac=<?= $_POST['mac']; ?>" class="">
                         ¿ No estás registrado ? regístrate

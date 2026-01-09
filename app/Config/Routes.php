@@ -17,5 +17,10 @@ $routes->get('/contact-transference', 'UsersController::index');
 
 $routes->post('sendNotification', 'UsersController::sendNotification');
 
+//loginToMikrotik
+$routes->post('/login-to-mik', 'UserController::loginToMikrotik');
+
+
 //register
 $routes->get('/create-order-payment', 'PaymentController::createOrderPayment');
+

@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\UsersTransferenceModel;
+use App\Libraries\RouterosAPI;
 
 class UsersController extends BaseController
 {
@@ -12,7 +13,7 @@ class UsersController extends BaseController
 
         $email = $this->request->getGet('email');
         $plan  = $this->request->getGet('plan');
-        $phone  = $this->request->getGet('phone'); 
+        $phone  = $this->request->getGet('phone');
 
 
         return view('contact-transference', [
@@ -60,7 +61,7 @@ class UsersController extends BaseController
                     'required' => 'Debe seleccionar un plan.',
                 ]
             ],
-         
+
         ];
 
         if (!$this->validate($rules)) {
@@ -149,7 +150,7 @@ class UsersController extends BaseController
                 $whatMessage .= "📧 Email: {$userEmail}\n";
                 $whatMessage .= "📞 Teléfono: {$phone}\n";
                 $whatMessage .= "📦 Plan: {$plan}\n";
-             
+
 
                 $query = http_build_query([
                     'recipient' => $recipient,
@@ -185,6 +186,48 @@ class UsersController extends BaseController
                   Por favor, intenta nuevamente en unos minutos 
                   o contáctanos por WhatsApp o teléfono.'
             ]);
+        }
+    }
+
+    public function loginToMikrotik()
+    {
+
+        $rules = [
+            'email' => 'required|max_length[100]|valid_email',
+            'ip' => 'required|valid_ip',
+        ];
+
+        $userLog = $this->request->getPost('email');
+        $passwordLog = $this->request->getPost('email'); // password will be the same email
+        $ipUser = $this->request->getPost('ip'); 
+
+        // ----- Login en Mikrotik -----
+        $ip       = env('ip_mikrotik');
+        $username = env('username_mikrotik');
+        $password = env('password_mikrotik');
+        $port     = env('port_mikrotik');
+
+        $API        = new RouterosAPI();
+        $API->debug = false;
+        $API->port  = $port;   
+       
+
+        $mkconnec = [];
+
+        if ($API->connect($ip, $username, $password)) {
+            $mkconnec = $API->comm('/ip/hotspot/active/login', [
+                'user'        => $userLog,
+                'password'    => $passwordLog,
+                // 'mac-address' => $json_response['optional']['mac'] ?? null,
+                'ip'          => $ipUser ?? null,
+            ]);
+            $API->disconnect();
+        } else {
+            log_message('error', 'No se pudo conectar a Mikrotik en confirmation()');
+        }
+
+        if (isset($mkconnec['!trap'])) {
+            log_message('error', 'Error hotspot login: ' . $mkconnec['!trap'][0]['message']);
         }
     }
 }
