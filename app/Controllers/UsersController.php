@@ -197,13 +197,13 @@ class UsersController extends BaseController
             'ip' => 'required|valid_ip',
         ];
 
-         if (!$this->validate($rules)) {
+        if (!$this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->listErrors());
         }
 
         $userLog = $this->request->getPost('email');
         $passwordLog = $this->request->getPost('email'); // password will be the same email
-        $ipUser = $this->request->getPost('ip'); 
+        $ipUser = $this->request->getPost('ip');
 
         // ----- Login en Mikrotik -----
         $ip       = env('ip_mikrotik');
@@ -213,8 +213,8 @@ class UsersController extends BaseController
 
         $API        = new RouterosAPI();
         $API->debug = false;
-        $API->port  = $port;   
-       
+        $API->port  = $port;
+
 
         $mkconnec = [];
 
@@ -232,7 +232,9 @@ class UsersController extends BaseController
 
         if (isset($mkconnec['!trap'])) {
             log_message('error', 'Error hotspot login: ' . $mkconnec['!trap'][0]['message']);
-            echo $mkconnec['!trap'];
+            echo '<pre>';  // Para formato legible
+            print_r($mkconnec['!trap']);  // Muestra la estructura completa del array
+            echo '</pre>';
         }
     }
 }
