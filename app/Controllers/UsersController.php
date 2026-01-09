@@ -204,6 +204,7 @@ class UsersController extends BaseController
         $userLog = $this->request->getPost('email');
         $passwordLog = $this->request->getPost('email'); // password will be the same email
         $ipUser = $this->request->getPost('ip');
+        $macUser = $this->request->getPost('mac');
 
         // ----- Login en Mikrotik -----
         $ip       = env('ip_mikrotik');
@@ -231,10 +232,22 @@ class UsersController extends BaseController
         }
 
         if (isset($mkconnec['!trap'])) {
-            log_message('error', 'Error hotspot login: ' . $mkconnec['!trap'][0]['message']);
-            echo '<pre>';  // Para formato legible
-            print_r($mkconnec['!trap']);  // Muestra la estructura completa del array
-            echo '</pre>';
+
+            // $errorMessage = $mkconnec['!trap'][0]['message'] ?? 'Hotspot login error';
+            $errorMessage = $mkconnec['!trap'][0]['message'] ?? 'Hotspot error';
+
+            log_message('error', 'Error hotspot login: ' . $errorMessage);
+
+            // Guardar datos relevantes en session (flashdata)
+            session()->setFlashdata('hotspot_error', (string) $errorMessage);
+
+            // Construir URL con parámetros GET
+            $url = base_url('create-order-payment') . '?' . http_build_query([
+                'ip'  => $ip,
+                'mac' => $macUser,
+            ]);
+
+            return redirect()->to($url);
         }
     }
 }

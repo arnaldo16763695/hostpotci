@@ -3,7 +3,10 @@
 
 <?= $this->section('content'); ?>
 
-
+<?php
+/** @var string|null $error */
+$error = session()->getFlashdata('hotspot_error');
+?>
 
 <div class="row align-items-center justify-content-center min-vh-100 ">
     <div class="col col-12 col-md-5 col-lg-4 ">
@@ -70,6 +73,22 @@
                         <?= session()->getFlashdata(('errors'))  ?>
                     </div>
 
+                <?php endif; ?>
+
+
+
+                <?php if (!empty($error)): ?>
+                    <div class="alert alert-danger my-3" role="alert">
+                        <?php
+                        if (stripos($error, 'uptime limit') !== false) {
+                            echo 'Tu tiempo de internet expiró, debes actualizar tu pago.';
+                        } elseif (stripos($error, 'invalid user') !== false) {
+                            echo 'Usuario o contraseña incorrectos.';
+                        } else {
+                            echo 'No fue posible conectarte. Por favor intenta nuevamente.';
+                        }
+                        ?>
+                    </div>
                 <?php endif; ?>
                 <div class="mb-3 mt-3 d-flex justify-content-between">
                     <form method="POST" action="<?= base_url(); ?>">
