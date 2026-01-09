@@ -55,17 +55,11 @@
                         <!-- <input type="hidden" class="form-control" id="ip" name="ip" value=""> -->
                         <!-- <input type="hidden" class="form-control" id="mac" name="mac" value=""> -->
                         <div class="mb-3 mt-3 d-flex justify-content-between">
-                          <button type="submit" class="btn btn-primary">Pagar con tarjeta</button>
+                            <button type="submit" class="btn btn-primary">Pagar con tarjeta</button>
                         </div>
 
                 </form>
-                <div class="mb-3 mt-3 d-flex justify-content-between">
-                    <form method="POST" action="<?= base_url(); ?>">
-                        <input type="hidden" class="form-control" id="ip" name="ip" value="<?= $_GET['ip']; ?>">
-                        <input type="hidden" class="form-control" id="mac" name="mac" value="<?= $_GET['mac']; ?>">
-                        <button type="submit" class="btn btn-danger">Atrás</button>
-                    </form>
-                </div>
+
                 <div class="mb-3 mt-3 d-flex justify-content-center">
                     <a id="transference" href="<?= base_url('contact-transference'); ?>" class="">
                         Pagar por transferencia
@@ -77,6 +71,13 @@
                     </div>
 
                 <?php endif; ?>
+                <div class="mb-3 mt-3 d-flex justify-content-between">
+                    <form method="POST" action="<?= base_url(); ?>">
+                        <input type="hidden" class="form-control" id="ip" name="ip" value="<?= $_GET['ip']; ?>">
+                        <input type="hidden" class="form-control" id="mac" name="mac" value="<?= $_GET['mac']; ?>">
+                        <button type="submit" class="btn btn-danger">Atrás</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
