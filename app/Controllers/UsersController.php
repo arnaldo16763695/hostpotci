@@ -247,10 +247,17 @@ class UsersController extends BaseController
             'password' => 'M0v1n3t20',
         ];
 
-        if (!empty($p['ip']) && filter_var($p['ip'], FILTER_VALIDATE_IP)) {
-            $params['ip-address'] = $p['ip'];
+        /**
+         * SOLO enviar IP si realmente existe
+         * (si no, Mikrotik hace TRAP)
+         */
+        if (!empty($p['ip'])) {
+            $params['ip'] = $p['ip'];
         }
 
+        /**
+         * MAC sí puedes enviarla siempre
+         */
         if (!empty($p['mac'])) {
             $params['mac-address'] = $p['mac'];
         }
@@ -260,6 +267,9 @@ class UsersController extends BaseController
 
         if (isset($res['!trap'])) {
             log_message('error', 'Hotspot login error: ' . $res['!trap'][0]['message']);
+            log_message('error', 'Params sent: ' . json_encode($params));
+        } else {
+            log_message('info', 'Hotspot login OK: ' . json_encode($params));
         }
     }
 }
