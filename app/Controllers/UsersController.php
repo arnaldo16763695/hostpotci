@@ -8,6 +8,8 @@ use App\Libraries\RouterosAPI;
 class UsersController extends BaseController
 {
     protected $helpers = ['form'];
+
+
     public function index($email = null, $plan = null)
     {
 
@@ -51,10 +53,11 @@ class UsersController extends BaseController
                 ]
             ],
             'phone' => [
-                'rules' => 'required|min_length[8]|max_length[12]',
+                // 'rules' => 'required|regex_match[/^9\d{8}$/]',
+                'rules' => 'required',
                 'errors' => [
-                    'required'   => 'El teléfono es obligatorio.',
-                    'min_length' => 'Debe ingresar al menos 8 dígitos.',
+                    'required' => 'El teléfono es obligatorio.',
+                    'regex_match' => 'Ingrese un número celular válido (ej: 9XXXXXXXX).',
                 ]
             ],
             'plan' => [
@@ -77,6 +80,16 @@ class UsersController extends BaseController
         }
 
         $post = $this->request->getPost();
+
+        $payload = [
+            'name'  => $post['name'],
+            'email' => $post['email'],
+            'phone' => env('country_code') . $post['phone'], // 🔑 clave
+            'rut'   => $post['rut'],
+            'plan'  => $post['plan'],
+            'ip'    => $post['ip'] ?? null,
+            'mac'   => $post['mac'],
+        ];
 
         $data = $this->request->getPost([
             'name',
@@ -139,91 +152,17 @@ class UsersController extends BaseController
 
         if ($email->send()) {
 
-            // =========================
-            // Send WhatsApp (NEW BLOCK)
-            // =========================
-            try {
-                $apiUrl    = 'http://api.textmebot.com/send.php';
-                $apiKey    = env('whatsapp_api_key');
-                $recipient = env('recipient');
+            $this->sendWhatsApp(
+                env('recipient'),
+                $this->buildAdminWhatsApp($payload)
+            );
 
-                // Avoid variable name collision with $email service
-                $name      = $post['name']  ?? '';
-                $userEmail = $post['email'] ?? '';
-                $phone     = $post['phone'] ?? '';
-                $plan      = $post['plan']  ?? '';
-                $mac       = $post['mac']   ?? '';
-                $userIp    = $post['ip']    ?? '';
+            // $this->sendWhatsApp(
+            //     $payload['phone'],
+            //     $this->buildClientWhatsApp($payload)
+            // );
 
-                $whatMessage  = "📡 *Nueva activación de Internet*\n\n";
-                $whatMessage .= "👤 Nombre: {$name}\n";
-                $whatMessage .= "📧 Email: {$userEmail}\n";
-                $whatMessage .= "📞 Teléfono: {$phone}\n";
-                $whatMessage .= "📦 Plan: {$plan}\n";
-                $whatMessage .= "💻 MAC: {$mac}\n";
-                if (!empty($userIp)) {
-                    $whatMessage .= "🌐 IP: {$userIp}\n";
-                }
-
-                $query = http_build_query([
-                    'recipient' => $recipient,
-                    'apikey'    => $apiKey,
-                    'text'      => $whatMessage,
-                ]);
-
-                $url = $apiUrl . '?' . $query;
-
-                // Fire and forget (do not block user flow)
-                $waResponse = @file_get_contents($url);
-
-                // Log response for debugging
-                log_message('info', 'WhatsApp API response: ' . ($waResponse ?? 'no-response'));
-            } catch (\Throwable $e) {
-                // Don't break the flow if WhatsApp fails
-                log_message('error', 'WhatsApp send failed: ' . $e->getMessage());
-            }
-
-            //connect to mikrotik
-            // ----- Login en Mikrotik -----
-            $ip       = env('ip_mikrotik');
-            $username = env('username_mikrotik');
-            $password = env('password_mikrotik');
-            $port     = env('port_mikrotik');
-
-            $API        = new RouterosAPI();
-            $API->debug = false;
-            $API->port  = $port;
-
-            $mkconnec = [];
-
-            if ($API->connect($ip, $username, $password)) {
-                $mkconnec = $API->comm('/ip/hotspot/active/login', [
-                    'user'        => 'user_' . $plan,
-                    'password'    => 'M0v1n3t20',
-                    'mac-address' => $mac ?? null,
-                    'ip'          => $userIp ?? null,
-                ]);
-                $API->disconnect();
-            } else {
-                log_message('error', 'No se pudo conectar a Mikrotik en confirmation()');
-            }
-
-            if (isset($mkconnec['!trap'])) {
-                log_message('error', 'Error hotspot login: ' . $mkconnec['!trap'][0]['message']);
-                log_message('info', 'Client IP from POST: ' . ($post['ip'] ?? 'no-ip'));
-            }
-
-            // Return success view (same as you had)
-            return view('message', [
-                'title' => 'Solicitud enviada',
-                'message' => '
-        Hemos recibido tu solicitud para conexión a Internet.<br>
-        Por favor envía el comprobante de la transferencia al WhatsApp:
-        <a href="https://wa.me/56976452046" target="_blank">
-            +56 9 7645 2046
-        </a>
-    '
-            ]);
+            $this->loginHotspot($payload);
         } else {
             log_message('error', $email->printDebugger(['headers', 'subject', 'body']));
 
@@ -233,6 +172,94 @@ class UsersController extends BaseController
                   Por favor, intenta nuevamente en unos minutos 
                   o contáctanos por WhatsApp o teléfono.'
             ]);
+        }
+    }
+
+    private function sendWhatsApp(string $recipient, string $message): void
+    {
+        try {
+            $query = http_build_query([
+                'recipient' => $recipient,
+                'apikey'    => env('WHATSAPP_API_KEY'),
+                'text'      => $message,
+            ]);
+
+            @file_get_contents(
+                'http://api.textmebot.com/send.php?' . $query
+            );
+
+            log_message('info', 'WhatsApp sent to ' . $recipient);
+        } catch (\Throwable $e) {
+            log_message('error', 'WhatsApp failed: ' . $e->getMessage());
+        }
+    }
+
+    private function buildAdminWhatsApp(array $p): string
+    {
+        $msg  = "📡 *Nueva activación de Internet*\n\n";
+        $msg .= "👤 Nombre: {$p['name']}\n";
+        $msg .= "📧 Email: {$p['email']}\n";
+        $msg .= "📞 Teléfono: {$p['phone']}\n";
+        $msg .= "📦 Plan: {$p['plan']}\n";
+        $msg .= "💻 MAC: {$p['mac']}\n";
+
+        if (!empty($p['ip'])) {
+            $msg .= "🌐 IP: {$p['ip']}\n";
+        }
+
+        return $msg;
+    }
+
+    private function buildClientWhatsApp(array $p): string
+    {
+        return
+            "📡 *Gracias por tu solicitud de Internet*\n\n" .
+            "Hola *{$p['name']}*, gracias por preferir *Movinet Comunicaciones* 🙌\n\n" .
+            "Para continuar con la activación, realiza la transferencia:\n\n" .
+            "🏢 *MOVINET COMUNICACIONES SPA*\n" .
+            "🆔 RUT: 77.008.345-1\n" .
+            "🏦 Mercado Pago\n" .
+            "💳 Cuenta Vista\n" .
+            "🔢 N° de cuenta: 1075053672\n" .
+            "📧 Correo: ventas@globalsi.cl\n\n" .
+            "📦 *Plan seleccionado:* {$p['plan']}\n\n" .
+            "👉 Una vez realizada la transferencia, *envía el comprobante a este WhatsApp*.\n\n" .
+            "¡Quedamos atentos! 😊";
+    }
+
+    private function loginHotspot(array $p): void
+    {
+        $API = new RouterosAPI();
+        $API->debug = false;
+        $API->port  = env('port_mikrotik');
+
+        if (!$API->connect(
+            env('ip_mikrotik'),
+            env('username_mikrotik'),
+            env('password_mikrotik')
+        )) {
+            log_message('error', 'No se pudo conectar a Mikrotik');
+            return;
+        }
+
+        $params = [
+            'user'     => 'user_' . $p['plan'],
+            'password' => 'M0v1n3t20',
+        ];
+
+        if (!empty($p['ip']) && filter_var($p['ip'], FILTER_VALIDATE_IP)) {
+            $params['ip-address'] = $p['ip'];
+        }
+
+        if (!empty($p['mac'])) {
+            $params['mac-address'] = $p['mac'];
+        }
+
+        $res = $API->comm('/ip/hotspot/active/login', $params);
+        $API->disconnect();
+
+        if (isset($res['!trap'])) {
+            log_message('error', 'Hotspot login error: ' . $res['!trap'][0]['message']);
         }
     }
 }
