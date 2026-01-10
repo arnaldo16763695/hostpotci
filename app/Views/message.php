@@ -10,7 +10,7 @@
                     <h2 class="mb-3"><?= esc($title) ?></h2>
 
                     <p style="font-size: 15px; margin: 0;">
-                        <?= esc($message) ?>
+                        <?= $message ?>
                     </p>
                 </div>
             </div>

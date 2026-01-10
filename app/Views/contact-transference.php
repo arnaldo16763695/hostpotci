@@ -7,7 +7,7 @@
         <div class="col-12 col-sm-10 col-md-8 col-lg-6">
             <div class="card shadow-lg form-signin">
                 <div class="card-body p-4 p-md-5">
-                    <h1 class="card-title font-weight-bold mb-4">Introduzca sus datos</h1>
+                    <h1 class="card-title font-weight-bold mb-4">Introduzca sus datos</h1> 
 
                     <form method="POST" action="<?= base_url('sendNotification') ?>" autocomplete="off">
                         <?= csrf_field(); ?>
@@ -64,6 +64,13 @@
                                 name="mac"
                                 id="mac"
                                 value="<?= $mac; ?>"
+                            >
+                            <input
+                                type="hidden"
+                                class="form-control"
+                                name="ip"
+                                id="ip"
+                                value="<?= $ip; ?>"
                             >
                         </div>
 

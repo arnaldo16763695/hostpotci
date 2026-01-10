@@ -14,12 +14,14 @@ class UsersController extends BaseController
         $email = $this->request->getGet('email');
         $plan  = $this->request->getGet('plan');
         $mac  = $this->request->getGet('mac');
+        $ip  = $this->request->getGet('ip');
 
 
         return view('contact-transference', [
             'email' => $email,
             'plan'  => $plan,
             'mac'  => $mac,
+            'ip'  => $ip,
         ]);
     }
 
@@ -208,6 +210,7 @@ class UsersController extends BaseController
 
             if (isset($mkconnec['!trap'])) {
                 log_message('error', 'Error hotspot login: ' . $mkconnec['!trap'][0]['message']);
+                log_message('info', 'Client IP from POST: ' . ($post['ip'] ?? 'no-ip'));
             }
 
             // Return success view (same as you had)
