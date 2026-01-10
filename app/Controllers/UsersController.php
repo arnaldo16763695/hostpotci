@@ -155,7 +155,7 @@ class UsersController extends BaseController
                 $mac       = $post['mac']   ?? '';
                 $userIp    = $post['ip']    ?? '';
 
-                $whatMessage  = "📡 *Nueva solicitud de Internet*\n\n";
+                $whatMessage  = "📡 *Nueva activación de Internet*\n\n";
                 $whatMessage .= "👤 Nombre: {$name}\n";
                 $whatMessage .= "📧 Email: {$userEmail}\n";
                 $whatMessage .= "📞 Teléfono: {$phone}\n";
