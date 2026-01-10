@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\UsersTransferenceModel;
+use App\Libraries\RouterosAPI;
 
 class UsersController extends BaseController
 {
@@ -150,7 +151,7 @@ class UsersController extends BaseController
                 $phone     = $post['phone'] ?? '';
                 $plan      = $post['plan']  ?? '';
                 $mac       = $post['mac']   ?? '';
-                $ip        = $post['ip']    ?? '';
+                $userIp    = $post['ip']    ?? '';
 
                 $whatMessage  = "📡 *Nueva solicitud de Internet*\n\n";
                 $whatMessage .= "👤 Nombre: {$name}\n";
@@ -158,8 +159,8 @@ class UsersController extends BaseController
                 $whatMessage .= "📞 Teléfono: {$phone}\n";
                 $whatMessage .= "📦 Plan: {$plan}\n";
                 $whatMessage .= "💻 MAC: {$mac}\n";
-                if (!empty($ip)) {
-                    $whatMessage .= "🌐 IP: {$ip}\n";
+                if (!empty($userIp)) {
+                    $whatMessage .= "🌐 IP: {$userIp}\n";
                 }
 
                 $query = http_build_query([
@@ -180,12 +181,45 @@ class UsersController extends BaseController
                 log_message('error', 'WhatsApp send failed: ' . $e->getMessage());
             }
 
+            //connect to mikrotik
+            // ----- Login en Mikrotik -----
+            $ip       = env('ip_mikrotik');
+            $username = env('username_mikrotik');
+            $password = env('password_mikrotik');
+            $port     = env('port_mikrotik');
+
+            $API        = new RouterosAPI();
+            $API->debug = false;
+            $API->port  = $port;
+
+            $mkconnec = [];
+
+            if ($API->connect($ip, $username, $password)) {
+                $mkconnec = $API->comm('/ip/hotspot/active/login', [
+                    'user'        => 'user_' . $plan,
+                    'password'    => 'M0v1n3t20',
+                    'mac-address' => $mac ?? null,
+                    'ip'          => $userIp ?? null,
+                ]);
+                $API->disconnect();
+            } else {
+                log_message('error', 'No se pudo conectar a Mikrotik en confirmation()');
+            }
+
+            if (isset($mkconnec['!trap'])) {
+                log_message('error', 'Error hotspot login: ' . $mkconnec['!trap'][0]['message']);
+            }
+
             // Return success view (same as you had)
             return view('message', [
                 'title' => 'Solicitud enviada',
-                'message' => 'Hemos recibido tu solicitud para conexión a Internet. 
-                  Un asesor revisará tus datos y te contactará con las instrucciones 
-                  para realizar la transferencia. Despues debe esperar un tiempo máximo de 45 minutos.'
+                'message' => '
+        Hemos recibido tu solicitud para conexión a Internet.<br>
+        Por favor envía el comprobante de la transferencia al WhatsApp:
+        <a href="https://wa.me/56976452046" target="_blank">
+            +56 9 7645 2046
+        </a>
+    '
             ]);
         } else {
             log_message('error', $email->printDebugger(['headers', 'subject', 'body']));
