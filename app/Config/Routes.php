@@ -20,7 +20,11 @@ $routes->post('sendNotification', 'UsersController::sendNotification');
 //loginToMikrotik
 $routes->post('/login-to-mik', 'UsersController::loginToMikrotik');
 
+//register user
+$routes->post('/create-user-mikrotik', 'UsersController::createUserMikrotik');
 
 //register
 $routes->get('/create-order-payment', 'PaymentController::createOrderPayment');
+
+
 

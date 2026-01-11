@@ -3,6 +3,7 @@ const $inputEmail = document.getElementById("email");
 const $linkTranference = document.getElementById("transference");
 const $plans = document.querySelectorAll('input[name="plan"]');
 const $macInput = document.getElementById("mac");
+const $ipInput = document.getElementById("ip");
 const $phoneInput = document.getElementById("phone");
 
 // Check required elements
@@ -13,6 +14,7 @@ if ($inputEmail && $linkTranference && $plans.length > 0) {
   // MAC is fixed (from hidden input)
   const mac = $macInput ? $macInput.value : "";
   const phone = $phoneInput ? $phoneInput.value : "";
+  const ip = $ipInput ? $ipInput.value : "";
 
   function updateTransferLink() {
     const email = $inputEmail.value.trim();
@@ -24,6 +26,7 @@ if ($inputEmail && $linkTranference && $plans.length > 0) {
     const params = new URLSearchParams();
 
     if (mac) params.append("mac", mac);
+    if (ip) params.append("ip", ip);
     if (myPhone) params.append("phone", myPhone);
     if (selectedPlan) params.append("plan", selectedPlan);
     if (email) params.append("email", email);

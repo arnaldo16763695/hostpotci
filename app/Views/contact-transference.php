@@ -9,7 +9,7 @@
                 <div class="card-body p-4 p-md-5">
                     <h1 class="card-title font-weight-bold mb-4">Introduzca sus datos</h1>
 
-                    <form method="POST" action="<?= base_url('sendNotification') ?>" autocomplete="off">
+                    <form method="POST" action="<?= base_url('create-user-mikrotik') ?>" autocomplete="off">
                         <?= csrf_field(); ?>
 
                         <div class="form-group mb-4">
@@ -57,6 +57,20 @@
                                 id="phone"
                                 value="<?= $phone; ?>"
                                 required
+                            >                        
+                            <input
+                                type="hidden"
+                                class="form-control"
+                                name="mac"
+                                id="mac"
+                                value="<?= $mac; ?>"
+                            >                        
+                            <input
+                                type="hidden"
+                                class="form-control"
+                                name="ip"
+                                id="ip"
+                                value="<?= $ip; ?>"
                             >                        
                         </div>
 

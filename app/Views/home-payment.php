@@ -18,7 +18,7 @@
                     <div class="mb-3  p-4">
                         <div class="mb-3">
                             <label class="mb-2" for="email">Teléfono:</label>
-                            <input type="email" class="form-control" name="email" id="email" value="" required autofocus>
+                            <input type="text" class="form-control" name="phone" id="phone" value="" required autofocus>
                         </div>
 
 

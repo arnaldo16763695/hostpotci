@@ -14,12 +14,16 @@ class UsersController extends BaseController
         $email = $this->request->getGet('email');
         $plan  = $this->request->getGet('plan');
         $phone  = $this->request->getGet('phone');
+        $mac  = $this->request->getGet('mac');
+        $ip  = $this->request->getGet('ip');
 
 
         return view('contact-transference', [
             'email' => $email,
             'plan'  => $plan,
             'phone'  => $phone,
+            'mac'  => $mac,
+            'ip'  => $ip,
         ]);
     }
 
@@ -193,7 +197,7 @@ class UsersController extends BaseController
     {
 
         $rules = [
-            'email' => 'required|max_length[100]|valid_email',
+            'phone' => 'required|max_length[15]',
             'ip' => 'required|valid_ip',
         ];
 
@@ -201,8 +205,8 @@ class UsersController extends BaseController
             return redirect()->back()->withInput()->with('errors', $this->validator->listErrors());
         }
 
-        $userLog = $this->request->getPost('email');
-        $passwordLog = $this->request->getPost('email'); // password will be the same email
+        $userLog = trim($this->request->getPost('phone'));
+        $passwordLog = trim($this->request->getPost('phone')); // password will be the same phone
         $ipUser = $this->request->getPost('ip');
         $macUser = $this->request->getPost('mac');
 
@@ -249,5 +253,11 @@ class UsersController extends BaseController
 
             return redirect()->to($url);
         }
+    }
+
+    public function createUserMikrotik()
+    {
+        print_r($_POST);
+        exit;
     }
 }

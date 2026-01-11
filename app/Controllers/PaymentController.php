@@ -33,7 +33,7 @@ class PaymentController extends BaseController
             'email' => 'required|max_length[100]|valid_email',
             'phone' => 'required|max_length[100]',
             'ip' => 'required|valid_ip',
-            'mac' => 'required|valid_mac',
+            'mac' => 'required',
         ];
 
         if (!$this->validate($rules)) {
