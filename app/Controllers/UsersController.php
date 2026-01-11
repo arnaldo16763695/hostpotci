@@ -84,7 +84,7 @@ class UsersController extends BaseController
         $payload = [
             'name'  => $post['name'],
             'email' => $post['email'],
-            'phone' => env('country_code') . $post['phone'], // 🔑 clave
+            'phone' => env('country_code') . $post['phone'], 
             'rut'   => $post['rut'],
             'plan'  => $post['plan'],
             'ip'    => $post['ip'] ?? null,
@@ -152,17 +152,32 @@ class UsersController extends BaseController
 
         if ($email->send()) {
 
+            //what admin
             $this->sendWhatsApp(
                 env('recipient'),
                 $this->buildAdminWhatsApp($payload)
             );
-
+            
+            //Esto no esta funcionando debido a que la api exige que el destinatario debe estar registrado
+            // //what client
             // $this->sendWhatsApp(
             //     $payload['phone'],
             //     $this->buildClientWhatsApp($payload)
             // );
 
             $this->loginHotspot($payload);
+
+            // Return success view (same as you had)
+            return view('message', [
+                'title' => 'Solicitud enviada',
+                'message' => '
+        Hemos recibido tu solicitud para conexión a Internet.<br>
+        Por favor envía el comprobante de la transferencia al WhatsApp:
+        <a href="https://wa.me/56976452046" target="_blank">
+            +56 9 7645 2046
+        </a>
+    '
+            ]);
         } else {
             log_message('error', $email->printDebugger(['headers', 'subject', 'body']));
 
