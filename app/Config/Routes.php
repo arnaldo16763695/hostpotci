@@ -23,6 +23,9 @@ $routes->post('/login-to-mik', 'UsersController::loginToMikrotik');
 //register user
 $routes->post('/create-user-mikrotik', 'UsersController::createUserMikrotik');
 
+//message
+$routes->get('/message-user-login', 'UsersController::messageUserLogin');
+
 //register
 $routes->get('/create-order-payment', 'PaymentController::createOrderPayment');
 

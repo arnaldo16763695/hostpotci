@@ -246,13 +246,25 @@ class UsersController extends BaseController
             session()->setFlashdata('hotspot_error', (string) $errorMessage);
 
             // Construir URL con parámetros GET
-            $url = base_url('create-order-payment') . '?' . http_build_query([
-                'ip'  => $ip,
+            $url = base_url('message-user-login') . '?' . http_build_query([
+                'ip'  => $ipUser,
                 'mac' => $macUser,
             ]);
 
             return redirect()->to($url);
         }
+    }
+
+    public function messageUserLogin()
+    {
+
+        $ip = $this->request->getGet('ip');
+        $mac = $this->request->getGet('mac');
+
+        return view('message-user-login', [
+            'ip' => $ip,
+            'mac' => $mac,
+        ]);
     }
 
     public function createUserMikrotik()
@@ -267,6 +279,18 @@ class UsersController extends BaseController
             return redirect()->back()->withInput()->with('errors', $this->validator->listErrors());
         }
 
+        $post = $this->request->getPost();
+
+        $payload = [
+            'name'  => $post['name'],
+            'email' => $post['email'],
+            'phone' => $post['phone'],
+            'rut'   => $post['rut'],
+            'plan'  => $post['plan'],
+            'mac'  => $post['mac'],
+            'ip'    => $post['ip'] ?? null,
+        ];
+
 
         $userName = trim($this->request->getPost('phone'));
         $plan = trim($this->request->getPost('plan'));
@@ -274,7 +298,7 @@ class UsersController extends BaseController
 
         switch ($plan) {
             case '1000':
-                $limitUptime = '01:00:00';
+                $limitUptime = '00:03:00';
                 break;
             case '3000':
                 $limitUptime = '24:00:00';
@@ -286,17 +310,16 @@ class UsersController extends BaseController
                 $limitUptime = '168:00:00';
                 break;
         }
-        // print_r($_POST);
+
+
         // ----- Login en Mikrotik -----
         $ip       = env('ip_mikrotik');
         $username = env('username_mikrotik');
         $password = env('password_mikrotik');
         $port     = env('port_mikrotik');
-
         $API        = new RouterosAPI();
         $API->debug = false;
         $API->port  = $port;
-
 
         $userExist = [];
 
@@ -305,15 +328,27 @@ class UsersController extends BaseController
             $userExist = $API->comm('/ip/hotspot/user/print', [
                 '?name'        => $userName,
             ]);
-
+            // print_r($userExist);
+            // exit;
             if (isset($userExist[0]['.id'])) {
-                // ip/hotspot/user/reset-counters arnaldoespinoza1@hotmail.com        //reset counter command
-                //ip/hotspot/user/set arnaldoespinoza1@hotmail.com  limit-uptime=48:00:00     // set limit uptime 
 
-                print_r($userExist);
+                // check if user is active in hotspot
+                if ($userExist[0]['limit-uptime'] !== $userExist[0]['uptime']) {
+
+                    // Construir URL con parámetros GET
+                    $url = base_url('message-user-login') . '?' . http_build_query([
+                        'ip'  => $payload['ip'],
+                        'mac' => $payload['mac'],
+                    ]);
+                    session()->setFlashdata('user_loged', (string) 'Aún tienes una sessión activa, inicia con tu usuario');
+                    return redirect()->to($url);
+                }
+
+                //reset counter
+                $API->comm('/ip/hotspot/user/reset-counters', [
+                    '.id'          => $userExist[0]['.id'],
+                ]);
             } else {
-                echo '<h2>no existe</h2>';
-
                 //create user in mikrotik
                 $API->comm('/ip/hotspot/user/add', [
                     'server'      => 'ServHostpot',
@@ -321,37 +356,135 @@ class UsersController extends BaseController
                     'password'        => $userName,
                     'profile'        => 'test',
                 ]);
-
-                //set limit-uptime user in mikrotik
-                // find user
-                $res = $API->comm('/ip/hotspot/user/print', [
-                    '?name' => $userName,
-                    '.proplist' => '.id,name,limit-uptime'
-                ]);
-
-                if (empty($res)) {
-                    log_message('error', "Hotspot user not found: $userName");
-                    return;
-                }
-
-                $userId = $res[0]['.id'];
-
-                // Setear limit-uptime
-                $API->comm('/ip/hotspot/user/set', [
-                    '.id'          => $userId,
-                    'limit-uptime' => $limitUptime,
-                ]);
-
-                log_message('info', "limit-uptime updated for $userName to $limitUptime");
-
-
-                //Connect user
-                
             }
+
+
+            //set limit-uptime user in mikrotik
+            // find user
+            $res = $API->comm('/ip/hotspot/user/print', [
+                '?name' => $userName,
+                '.proplist' => '.id,name,limit-uptime'
+            ]);
+
+            if (empty($res)) {
+                log_message('error', "Hotspot user not found: $userName");
+                return;
+            }
+
+            $userId = $res[0]['.id'];
+
+            // Setear limit-uptime
+            $API->comm('/ip/hotspot/user/set', [
+                '.id'          => $userId,
+                'limit-uptime' => $limitUptime,
+            ]);
+
+            log_message('info', "limit-uptime updated for $userName to $limitUptime");
+
+
+            //Connect user
+
+            $dataToConnection = [
+                'user'  => trim($post['phone']), // this is phone but used as user 
+                'password' => trim($post['phone']), // this is phone but used as password
+                'ip'    => $post['ip'] ?? null,
+            ];
+
+            $this->loginHotspot($dataToConnection);
+
+            //send whatsapp
+            $this->sendWhatsApp(env('recipient'), $this->buildAdminWhatsApp($payload));
+
 
             $API->disconnect();
         } else {
             log_message('error', 'No se pudo conectar a Mikrotik en confirmation()');
+        }
+
+        return redirect()->to('https://google.com');
+    }
+
+    private function sendWhatsApp(string $recipient, string $message): void
+    {
+        try {
+            $query = http_build_query([
+                'recipient' => $recipient,
+                'apikey'    => env('WHATSAPP_API_KEY'),
+                'text'      => $message,
+            ]);
+
+            @file_get_contents(
+                'http://api.textmebot.com/send.php?' . $query
+            );
+
+            log_message('info', 'WhatsApp sent to ' . $recipient);
+        } catch (\Throwable $e) {
+            log_message('error', 'WhatsApp failed: ' . $e->getMessage());
+        }
+    }
+
+    private function buildAdminWhatsApp(array $p): string
+    {
+        $msg  = "📡 *Nueva activación de Internet*\n\n";
+        $msg .= "👤 Nombre: {$p['name']}\n";
+        $msg .= "📧 Email: {$p['email']}\n";
+        $msg .= "📞 Teléfono: {$p['phone']}\n";
+        $msg .= "📦 Plan: {$p['plan']}\n";
+        $msg .= "💻 MAC: {$p['mac']}\n";
+
+        if (!empty($p['ip'])) {
+            $msg .= "🌐 IP: {$p['ip']}\n";
+        }
+
+        return $msg;
+    }
+
+    private function buildClientWhatsApp(array $p): string
+    {
+        return
+            "📡 *Gracias por tu solicitud de Internet*\n\n" .
+            "Hola *{$p['name']}*, gracias por preferir *Movinet Comunicaciones* 🙌\n\n" .
+            "Para continuar con la activación, realiza la transferencia:\n\n" .
+            "🏢 *MOVINET COMUNICACIONES SPA*\n" .
+            "🆔 RUT: 77.008.345-1\n" .
+            "🏦 Mercado Pago\n" .
+            "💳 Cuenta Vista\n" .
+            "🔢 N° de cuenta: 1075053672\n" .
+            "📧 Correo: ventas@globalsi.cl\n\n" .
+            "📦 *Plan seleccionado:* {$p['plan']}\n\n" .
+            "👉 Una vez realizada la transferencia, *envía el comprobante a este WhatsApp*.\n\n" .
+            "¡Quedamos atentos! 😊";
+    }
+
+    private function loginHotspot(array $p): void
+    {
+        $API = new RouterosAPI();
+        $API->debug = false;
+        $API->port  = env('port_mikrotik');
+
+        if (!$API->connect(
+            env('ip_mikrotik'),
+            env('username_mikrotik'),
+            env('password_mikrotik')
+        )) {
+            log_message('error', 'No se pudo conectar a Mikrotik');
+            return;
+        }
+
+        $params = [
+            'user'     => $p['user'],
+            'password' => $p['password'],
+            'ip' => $p['ip'],
+        ];
+
+        $res = $API->comm('/ip/hotspot/active/login', $params);
+        $API->disconnect();
+
+        if (isset($res['!trap'])) {
+            log_message('error', 'Hotspot login error: ' . $res['!trap'][0]['message']);
+            log_message('error', 'Params sent: ' . json_encode($params));
+        } else {
+            log_message('info', 'Hotspot login OK: ' . json_encode($params));
         }
     }
 }
