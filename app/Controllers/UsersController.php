@@ -257,7 +257,101 @@ class UsersController extends BaseController
 
     public function createUserMikrotik()
     {
-        print_r($_POST);
-        exit;
+        $rules = [
+            'phone' => 'required|max_length[15]',
+            'ip' => 'required|valid_ip',
+            'plan' => 'required',
+        ];
+
+        if (!$this->validate($rules)) {
+            return redirect()->back()->withInput()->with('errors', $this->validator->listErrors());
+        }
+
+
+        $userName = trim($this->request->getPost('phone'));
+        $plan = trim($this->request->getPost('plan'));
+        $limitUptime = '';
+
+        switch ($plan) {
+            case '1000':
+                $limitUptime = '01:00:00';
+                break;
+            case '3000':
+                $limitUptime = '24:00:00';
+                break;
+            case '5000':
+                $limitUptime = '48:00:00';
+                break;
+            case '10000':
+                $limitUptime = '168:00:00';
+                break;
+        }
+        // print_r($_POST);
+        // ----- Login en Mikrotik -----
+        $ip       = env('ip_mikrotik');
+        $username = env('username_mikrotik');
+        $password = env('password_mikrotik');
+        $port     = env('port_mikrotik');
+
+        $API        = new RouterosAPI();
+        $API->debug = false;
+        $API->port  = $port;
+
+
+        $userExist = [];
+
+        if ($API->connect($ip, $username, $password)) {
+
+            $userExist = $API->comm('/ip/hotspot/user/print', [
+                '?name'        => $userName,
+            ]);
+
+            if (isset($userExist[0]['.id'])) {
+                // ip/hotspot/user/reset-counters arnaldoespinoza1@hotmail.com        //reset counter command
+                //ip/hotspot/user/set arnaldoespinoza1@hotmail.com  limit-uptime=48:00:00     // set limit uptime 
+
+                print_r($userExist);
+            } else {
+                echo '<h2>no existe</h2>';
+
+                //create user in mikrotik
+                $API->comm('/ip/hotspot/user/add', [
+                    'server'      => 'ServHostpot',
+                    'name'        => $userName,
+                    'password'        => $userName,
+                    'profile'        => 'test',
+                ]);
+
+                //set limit-uptime user in mikrotik
+                // find user
+                $res = $API->comm('/ip/hotspot/user/print', [
+                    '?name' => $userName,
+                    '.proplist' => '.id,name,limit-uptime'
+                ]);
+
+                if (empty($res)) {
+                    log_message('error', "Hotspot user not found: $userName");
+                    return;
+                }
+
+                $userId = $res[0]['.id'];
+
+                // Setear limit-uptime
+                $API->comm('/ip/hotspot/user/set', [
+                    '.id'          => $userId,
+                    'limit-uptime' => $limitUptime,
+                ]);
+
+                log_message('info', "limit-uptime updated for $userName to $limitUptime");
+
+
+                //Connect user
+                
+            }
+
+            $API->disconnect();
+        } else {
+            log_message('error', 'No se pudo conectar a Mikrotik en confirmation()');
+        }
     }
 }
