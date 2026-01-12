@@ -73,7 +73,8 @@ class PaymentController extends BaseController
         $optional = json_encode([
             'ip' => $post['ip'],
             'mac' => $post['mac'],
-            'phone' => $post['phone']
+            'phone' => $post['phone'],
+            'plan' => $post['plan'],
         ]);
 
         $urlConfirmation = env('urlConfirmation');
@@ -324,8 +325,6 @@ class PaymentController extends BaseController
 
         // Flow suele mandar el token por POST (pero dejamos GET por si pruebas a mano)
         $post = $this->request->getPost();
-
-        print_r($_POST);exit;
         $token = $post['token'] ?? $this->request->getGet('token') ?? null;
 
         if (!$token) {
@@ -368,20 +367,17 @@ class PaymentController extends BaseController
                     ])
                     ->update();
 
-                //*************************************** */
-
                 $payload = [
-                    'name'  => $post['name'],
-                    'email' => $post['email'],
-                    'phone' => $post['phone'],
-                    'rut'   => $post['rut'],
-                    'plan'  => $post['plan'],
-                    'mac'  => $post['mac'],
-                    'ip'    => $post['ip'] ?? null,
+                    'email' => $json_response['payer'],
+                    'phone' => $json_response['optional']['phone'],
+                    'plan'  => $json_response['amount'],
+                    'mac'  => $json_response['optional']['mac'],
+                    'ip'    => $json_response['optional']['ip'],
                 ];
 
-                $userName = trim($this->request->getPost('phone'));
-                $plan = trim($this->request->getPost('plan'));
+
+                //  $userName = trim($this->request->getPost('phone'));
+                $plan = $payload['plan'];
                 $limitUptime = '';
 
                 switch ($plan) {
@@ -399,6 +395,7 @@ class PaymentController extends BaseController
                         break;
                 }
 
+
                 // ----- Login en Mikrotik -----
                 $ip       = env('ip_mikrotik');
                 $username = env('username_mikrotik');
@@ -408,28 +405,28 @@ class PaymentController extends BaseController
                 $API->debug = false;
                 $API->port  = $port;
 
-                $userExist = [];
+                $mkconnec = [];
 
                 if ($API->connect($ip, $username, $password)) {
 
                     $userExist = $API->comm('/ip/hotspot/user/print', [
-                        '?name'        => $userName,
+                        '?name'        => $payload['phone'],
                     ]);
                     // print_r($userExist);
                     // exit;
                     if (isset($userExist[0]['.id'])) {
 
                         // check if user is active in hotspot
-                        if ($userExist[0]['limit-uptime'] !== $userExist[0]['uptime']) {
+                        // if ($userExist[0]['limit-uptime'] !== $userExist[0]['uptime']) {
 
-                            // Construir URL con parámetros GET
-                            $url = base_url('message-user-login') . '?' . http_build_query([
-                                'ip'  => $payload['ip'],
-                                'mac' => $payload['mac'],
-                            ]);
-                            session()->setFlashdata('user_loged', (string) 'Aún tienes una sessión activa, inicia con tu usuario');
-                            return redirect()->to($url);
-                        }
+                        //     // Construir URL con parámetros GET
+                        //     $url = base_url('message-user-login') . '?' . http_build_query([
+                        //         'ip'  => $payload['ip'],
+                        //         'mac' => $payload['mac'],
+                        //     ]);
+                        //     session()->setFlashdata('user_loged', (string) 'Aún tienes una sessión activa, inicia con tu usuario');
+                        //     return redirect()->to($url);
+                        // }
 
                         //reset counter
                         $API->comm('/ip/hotspot/user/reset-counters', [
@@ -439,8 +436,8 @@ class PaymentController extends BaseController
                         //create user in mikrotik
                         $API->comm('/ip/hotspot/user/add', [
                             'server'      => 'ServHostpot',
-                            'name'        => $userName,
-                            'password'        => $userName,
+                            'name'        => $payload['phone'],
+                            'password'        => $payload['phone'],
                             'profile'        => 'test',
                         ]);
                     }
@@ -449,12 +446,12 @@ class PaymentController extends BaseController
                     //set limit-uptime user in mikrotik
                     // find user
                     $res = $API->comm('/ip/hotspot/user/print', [
-                        '?name' => $userName,
+                        '?name' => $payload['phone'],
                         '.proplist' => '.id,name,limit-uptime'
                     ]);
 
                     if (empty($res)) {
-                        log_message('error', "Hotspot user not found: $userName");
+                        log_message('error', "Hotspot user not found:" . $payload['phone']);
                         return;
                     }
 
@@ -466,42 +463,22 @@ class PaymentController extends BaseController
                         'limit-uptime' => $limitUptime,
                     ]);
 
-                    log_message('info', "limit-uptime updated for $userName to $limitUptime");
-
+                    log_message('info', "limit-uptime updated for" . $payload['phone'] . " to " . $limitUptime);
 
                     //Connect user
-
                     $dataToConnection = [
-                        'user'  => trim($post['phone']), // this is phone but used as user 
-                        'password' => trim($post['phone']), // this is phone but used as password
-                        'ip'    => $post['ip'] ?? null,
+                        'user'  => $payload['phone'], // this is phone but used as user 
+                        'password' => $payload['phone'], // this is phone but used as password
+                        'ip'    => $payload['ip'],
                     ];
 
                     $this->loginHotspot($dataToConnection);
-
-                    //send whatsapp
-                    $this->sendWhatsApp(env('recipient'), $this->buildAdminWhatsApp($payload));
-
-                    //sed email admin
-                    $this->sendEmailToAdmin($payload);
-
-                    //sed email to client
-                    $this->sendEmailToCliente($payload);
-
-
 
 
                     $API->disconnect();
                 } else {
                     log_message('error', 'No se pudo conectar a Mikrotik en confirmation()');
                 }
-
-                return redirect()->to('https://google.com');
-
-
-
-                //********************************** */
-
             }
             return $this->response->setStatusCode(200)->setBody('OK');
         } catch (Exception $e) {
@@ -561,5 +538,37 @@ class PaymentController extends BaseController
         }
 
         return $json;
+    }
+
+    private function loginHotspot(array $p): void
+    {
+        $API = new RouterosAPI();
+        $API->debug = false;
+        $API->port  = env('port_mikrotik');
+
+        if (!$API->connect(
+            env('ip_mikrotik'),
+            env('username_mikrotik'),
+            env('password_mikrotik')
+        )) {
+            log_message('error', 'No se pudo conectar a Mikrotik');
+            return;
+        }
+
+        $params = [
+            'user'     => $p['user'],
+            'password' => $p['password'],
+            'ip' => $p['ip'],
+        ];
+
+        $res = $API->comm('/ip/hotspot/active/login', $params);
+        $API->disconnect();
+
+        if (isset($res['!trap'])) {
+            log_message('error', 'Hotspot login error: ' . $res['!trap'][0]['message']);
+            log_message('error', 'Params sent: ' . json_encode($params));
+        } else {
+            log_message('info', 'Hotspot login OK: ' . json_encode($params));
+        }
     }
 }
