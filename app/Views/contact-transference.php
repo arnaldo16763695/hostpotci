@@ -142,6 +142,39 @@
                             <?php endif; ?>
                         </div>
 
+                         <div class="mb-4">
+                            <div class="card border-info shadow-sm">
+                                <div class="card-body p-3">
+
+                                    <h6 class="fw-bold mb-2 text-info">
+                                        Datos para la transferencia
+                                    </h6>
+
+                                    <div class="small lh-sm">
+                                        <div><strong>Empresa:</strong> Movinet Comunicaciones SPA</div>
+                                        <div><strong>RUT:</strong> 77.008.345-1</div>
+                                        <div><strong>Banco:</strong> Mercado Pago</div>
+                                        <div><strong>Cuenta:</strong> Vista</div>
+                                        <div><strong>N°:</strong> 1075053672</div>
+                                        <div>
+                                            <strong>Email:</strong>
+                                            <a href="mailto:ventas@globalsi.cl">ventas@globalsi.cl</a>
+                                        </div>
+                                    </div>
+
+                                    <hr class="my-2">
+
+                                    <div class="alert alert-warning py-2 px-3 mb-0 small text-center">
+                                        📲 Envía el comprobante de pago al WhatsApp<br>
+                                        <a href="https://wa.me/56976452046" class="fw-bold text-dark text-decoration-none">
+                                            +56 9 7645 2046
+                                        </a>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="mt-3 d-flex justify-content-end">
                             <button type="submit" class="btn btn-primary">
                                 Enviar
