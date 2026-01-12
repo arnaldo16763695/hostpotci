@@ -44,7 +44,7 @@ class PaymentController extends BaseController
 
 
         // we obtain the post variables
-        $post = $this->request->getPost(['mac', 'ip', 'email', 'plan']);
+        $post = $this->request->getPost(['mac', 'ip', 'email', 'plan', 'phone']);
 
         // Agrega a la url el servicio a consumir
 
@@ -72,7 +72,8 @@ class PaymentController extends BaseController
 
         $optional = json_encode([
             'ip' => $post['ip'],
-            'mac' => $post['mac']
+            'mac' => $post['mac'],
+            'phone' => $post['phone']
         ]);
 
         $urlConfirmation = env('urlConfirmation');
@@ -375,36 +376,13 @@ class PaymentController extends BaseController
                 $API->debug = false;
                 $API->port  = $port;
 
-                $userLog = '';
-                $users = [
-                    'user_1000',
-                    'user_3000',
-                    'user_5000',
-                    'user_10000',
-                ];
-
-                switch ($json_response['amount']) {
-                    case '1000':
-                        $userLog = $users[0];
-                        break;
-                    case '3000':
-                        $userLog = $users[1];
-                        break;
-                    case '5000':
-                        $userLog = $users[2];
-                        break;
-                    case '10000':
-                        $userLog = $users[3];
-                        break;
-                }
-
                 $mkconnec = [];
 
                 if ($API->connect($ip, $username, $password)) {
                     $mkconnec = $API->comm('/ip/hotspot/active/login', [
-                        'user'        => $userLog,
-                        'password'    => 'M0v1n3t20',
-                        'mac-address' => $json_response['optional']['mac'] ?? null,
+                        'user'        => $json_response['optional']['phone'] ?? null,
+                        'password'    => $json_response['optional']['phone'] ?? null,
+                        // 'mac-address' => $json_response['optional']['mac'] ?? null,
                         'ip'          => $json_response['optional']['ip'] ?? null,
                     ]);
                     $API->disconnect();
