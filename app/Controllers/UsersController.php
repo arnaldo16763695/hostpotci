@@ -355,10 +355,10 @@ class UsersController extends BaseController
             } else {
                 //create user in mikrotik
                 $API->comm('/ip/hotspot/user/add', [
-                    'server'      => 'ServHostpot',
+                    'server'      => env('serv_hotspot'),
                     'name'        => $userName,
                     'password'        => $userName,
-                    'profile'        => 'test',
+                    'profile'        => env('user_profile'),
                 ]);
             }
 

@@ -435,10 +435,10 @@ class PaymentController extends BaseController
                     } else {
                         //create user in mikrotik
                         $API->comm('/ip/hotspot/user/add', [
-                            'server'      => 'ServHostpot',
+                            'server'      => env('serv_hotspot'),
                             'name'        => $payload['phone'],
                             'password'        => $payload['phone'],
-                            'profile'        => 'test',
+                            'profile'        => env('user_profile'),
                         ]);
                     }
 
