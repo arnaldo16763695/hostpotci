@@ -291,6 +291,10 @@ class UsersController extends BaseController
             'ip'    => $post['ip'] ?? null,
         ];
 
+        //save in db
+        $userTM = new UsersTransferenceModel();
+        $userTM->insert($payload);
+
 
         $userName = trim($this->request->getPost('phone'));
         $plan = trim($this->request->getPost('plan'));
@@ -298,7 +302,7 @@ class UsersController extends BaseController
 
         switch ($plan) {
             case '1000':
-                $limitUptime = '00:03:00';
+                $limitUptime = '01:00:00';
                 break;
             case '3000':
                 $limitUptime = '24:00:00';
@@ -395,6 +399,14 @@ class UsersController extends BaseController
             //send whatsapp
             $this->sendWhatsApp(env('recipient'), $this->buildAdminWhatsApp($payload));
 
+            //sed email admin
+            $this->sendEmailToAdmin($payload);
+
+            //sed email to client
+            $this->sendEmailToCliente($payload);
+
+            
+
 
             $API->disconnect();
         } else {
@@ -486,5 +498,141 @@ class UsersController extends BaseController
         } else {
             log_message('info', 'Hotspot login OK: ' . json_encode($params));
         }
+    }
+
+    private function sendEmailToAdmin(array $data): void
+    {
+        // Build email HTML message (your same logic)
+        $message = '
+    <p style="font-family: Arial, sans-serif; font-size: 15px; color: #333;">
+        Hola, estoy escribiendo para solicitar una <strong>conexión a Internet</strong>. 
+        Estos son mis datos:
+    </p>
+
+    <table cellpadding="10" cellspacing="0" width="100%" 
+        style="border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px;">
+
+        <thead>
+            <tr style="background-color: #004aad; color: #fff; text-align: left;">
+                <th style="padding: 10px; width: 30%;">Campo</th>
+                <th style="padding: 10px;">Valor</th>
+            </tr>
+        </thead>
+
+        <tbody>
+    ';
+
+        foreach ($data as $key => $value) {
+            $label = ucwords(str_replace('_', ' ', $key));
+
+            $message .= "
+            <tr style='border-bottom: 1px solid #ddd;'>
+                <td style='font-weight: bold; padding: 8px; background:#f8f8f8;'>{$label}</td>
+                <td style='padding: 8px;'>{$value}</td>
+            </tr>
+        ";
+        }
+
+        $message .= '
+        </tbody>
+    </table>
+    ';
+
+        // Send email (keep your current way)
+        $email = service('email');
+        $email->setTo(env('setToEmail'));
+        $email->setSubject('Deseo conectarme al hotspot');
+        $email->setMessage($message);
+
+        $email->send();
+    }
+
+    private function sendEmailToCliente(array $data): void
+    {
+        // Mapeo simple (por claridad)
+        $name  = $data['name']  ?? '';
+        $emailClient = $data['email'] ?? '';
+        $plan  = $data['plan']  ?? '';
+
+        // Puedes mapear el plan a algo más amigable si quieres
+        $planLabel = match ($plan) {
+            '1000'  => '1 Hora de Internet ($1.000)',
+            '3000'  => '1 Día de Internet ($3.000)',
+            '5000'  => '2 Días de Internet ($5.000)',
+            '10000' => '7 Días de Internet ($10.000)',
+            default => 'Plan seleccionado',
+        };
+
+        // Mensaje HTML para el cliente
+        $message = '
+    <p style="font-family: Arial, sans-serif; font-size: 15px; color: #333;">
+        Hola <strong>' . esc($name) . '</strong>,
+    </p>
+
+    <p style="font-family: Arial, sans-serif; font-size: 15px; color: #333;">
+        Gracias por tu interés en nuestro servicio de <strong>Internet</strong>.
+        A continuación te dejamos los datos para realizar la transferencia correspondiente
+        al siguiente servicio:
+    </p>
+
+    <p style="font-family: Arial, sans-serif; font-size: 15px; color: #333;">
+        <strong>📦 Servicio contratado:</strong><br>
+        ' . esc($planLabel) . '
+    </p>
+
+    <table cellpadding="8" cellspacing="0" width="100%"
+        style="border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px; margin-top: 10px;">
+
+        <tbody>
+            <tr>
+                <td style="font-weight: bold; background:#f5f5f5;">Empresa</td>
+                <td>MOVINET COMUNICACIONES SPA</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold; background:#f5f5f5;">RUT</td>
+                <td>77.008.345-1</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold; background:#f5f5f5;">Banco</td>
+                <td>Mercado Pago</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold; background:#f5f5f5;">Tipo de cuenta</td>
+                <td>Cuenta Vista</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold; background:#f5f5f5;">N° de cuenta</td>
+                <td>1075053672</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold; background:#f5f5f5;">Correo</td>
+                <td>ventas@globalsi.cl</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p style="font-family: Arial, sans-serif; font-size: 15px; color: #333; margin-top: 15px;">
+        👉 <strong>Importante:</strong> Una vez realizada la transferencia, por favor envía
+        el <strong>comprobante de pago</strong> para agilizar la activación de tu servicio.
+    </p>
+
+    <p style="font-family: Arial, sans-serif; font-size: 15px; color: #333;">
+        Puedes enviarlo preferiblemente por <strong>WhatsApp</strong> al número:<br>
+        📲 <a href="https://wa.me/56976452046" target="_blank">+56 9 7645 2046</a>
+    </p>
+
+    <p style="font-family: Arial, sans-serif; font-size: 15px; color: #333;">
+        Quedamos atentos para activar tu servicio a la brevedad.<br>
+        <strong>Movinet Comunicaciones</strong>
+    </p>
+    ';
+
+        // Enviar correo
+        $email = service('email');
+        $email->setTo($emailClient);
+        $email->setSubject('Datos para activar tu servicio de Internet');
+        $email->setMessage($message);
+
+        $email->send();
     }
 }
