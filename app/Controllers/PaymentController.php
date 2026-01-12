@@ -20,8 +20,8 @@ class PaymentController extends BaseController
     public function createOrderPayment()
     {
         $ip = $this->request->getGet('ip');
-        $mac  = $this->request->getGet('mac');        
-        return view('creater-order-payment',[
+        $mac  = $this->request->getGet('mac');
+        return view('creater-order-payment', [
             'ip' => $ip,
             'mac'  => $mac,
         ]);
@@ -388,12 +388,12 @@ class PaymentController extends BaseController
                     $API->disconnect();
                 } else {
                     log_message('error', 'No se pudo conectar a Mikrotik en confirmation()');
-                    log_message('error2', $json_response['optional']['phone']);
-                    log_message('error3', $json_response['optional']['ip']);
                 }
 
                 if (isset($mkconnec['!trap'])) {
                     log_message('error', 'Error hotspot login: ' . $mkconnec['!trap'][0]['message']);
+                    log_message('debug', 'phone: ' . ($json_response['optional']['phone'] ?? 'null'));
+                    log_message('debug', 'ip: ' . ($json_response['optional']['ip'] ?? 'null'));
                 }
             }
             return $this->response->setStatusCode(200)->setBody('OK');
