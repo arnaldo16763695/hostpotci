@@ -388,8 +388,8 @@ class PaymentController extends BaseController
                     $API->disconnect();
                 } else {
                     log_message('error', 'No se pudo conectar a Mikrotik en confirmation()');
-                    log_message('error', $json_response['optional']['phone']);
-                    log_message('error', $json_response['optional']['ip']);
+                    log_message('error2', $json_response['optional']['phone']);
+                    log_message('error3', $json_response['optional']['ip']);
                 }
 
                 if (isset($mkconnec['!trap'])) {
