@@ -299,20 +299,35 @@ class UsersController extends BaseController
 
         $userName = trim($this->request->getPost('phone'));
         $plan = trim($this->request->getPost('plan'));
-        $limitUptime = '';
+        $userProfile = '';
+
+        // switch ($plan) {
+        //     case '1000':
+        //         $limitUptime = '00:10:00';
+        //         break;
+        //     case '3000':
+        //         $limitUptime = '24:00:00';
+        //         break;
+        //     case '5000':
+        //         $limitUptime = '48:00:00';
+        //         break;
+        //     case '10000':
+        //         $limitUptime = '168:00:00';
+        //         break;
+        // }
 
         switch ($plan) {
             case '1000':
-                $limitUptime = '00:10:00';
+                $userProfile = 'user_1000';
                 break;
             case '3000':
-                $limitUptime = '24:00:00';
+                $userProfile = 'user_3000';
                 break;
             case '5000':
-                $limitUptime = '48:00:00';
+                $userProfile = 'user_5000';
                 break;
             case '10000':
-                $limitUptime = '168:00:00';
+                $userProfile = 'user_10000';
                 break;
         }
 
@@ -325,7 +340,6 @@ class UsersController extends BaseController
         $API        = new RouterosAPI();
         $API->debug = false;
         $API->port  = $port;
-        $userProfile = env('user_profile');
         $hotspotServ = env('serv_hotspot');
 
         $userExist = [];
@@ -366,30 +380,7 @@ class UsersController extends BaseController
             }
 
 
-            //set limit-uptime user in mikrotik
-            // find user
-            $res = $API->comm('/ip/hotspot/user/print', [
-                '?name' => $userName,
-                '.proplist' => '.id,name,limit-uptime'
-            ]);
-
-            if (empty($res)) {
-                log_message('error', "Hotspot user not found: $userName");
-                return;
-            }
-
-            $userId = $res[0]['.id'];
-
-            // Setear limit-uptime
-            $API->comm('/ip/hotspot/user/set', [
-                '.id'          => $userId,
-                'limit-uptime' => $limitUptime,
-            ]);
-
-            log_message('info', "limit-uptime updated for $userName to $limitUptime");
-
-
-            //Connect user
+           //Connect user
 
             $dataToConnection = [
                 'user'  => trim($post['phone']), // this is phone but used as user 
