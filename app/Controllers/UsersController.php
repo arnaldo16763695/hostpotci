@@ -215,7 +215,7 @@ class UsersController extends BaseController
         $username = env('username_mikrotik');
         $password = env('password_mikrotik');
         $port     = env('port_mikrotik');
-      
+
 
         $API        = new RouterosAPI();
         $API->debug = false;
@@ -325,8 +325,8 @@ class UsersController extends BaseController
         $API        = new RouterosAPI();
         $API->debug = false;
         $API->port  = $port;
-        $userProfile =env('user_profile'); 
-        $hotspotServ =env('serv_hotspot'); 
+        $userProfile = env('user_profile');
+        $hotspotServ = env('serv_hotspot');
 
         $userExist = [];
 
@@ -408,7 +408,7 @@ class UsersController extends BaseController
             //sed email to client
             $this->sendEmailToCliente($payload);
 
-            
+
 
 
             $API->disconnect();
@@ -419,38 +419,38 @@ class UsersController extends BaseController
         return redirect()->to('https://google.com');
     }
 
- private function sendWhatsApp(string $recipient, string $message): void
-{
-    // Asegurar que el número no tenga +
-    $recipient = ltrim($recipient, '+');
+    private function sendWhatsApp(string $recipient, string $message): void
+    {
+        // Asegurar que el número no tenga +
+        $recipient = ltrim($recipient, '+');
 
-    // Validar mensaje
-    if (trim($message) === '') {
-        log_message('error', 'WhatsApp message vacío');
-        return;
+        // Validar mensaje
+        if (trim($message) === '') {
+            log_message('error', 'WhatsApp message vacío');
+            return;
+        }
+
+        $query = http_build_query([
+            'recipient' => $recipient,
+            'apikey'    => env('WHATSAPP_API_KEY'),
+            'text'      => $message,
+        ]);
+
+        $url = 'http://api.textmebot.com/send.php?' . $query;
+
+        // 👇 LOG DE URL COMPLETA
+        log_message('info', 'WhatsApp URL: ' . $url);
+
+        // Envío
+        $response = @file_get_contents($url);
+
+        // 👇 LOG DE RESPUESTA
+        log_message('info', 'WhatsApp response: ' . var_export($response, true));
+
+        if ($response === false) {
+            log_message('error', 'WhatsApp request failed (file_get_contents returned false)');
+        }
     }
-
-    $query = http_build_query([
-        'recipient' => $recipient,
-        'apikey'    => env('WHATSAPP_API_KEY'),
-        'text'      => $message,
-    ]);
-
-    $url = 'http://api.textmebot.com/send.php?' . $query;
-
-    // 👇 LOG DE URL COMPLETA
-    log_message('info', 'WhatsApp URL: ' . $url);
-
-    // Envío
-    $response = @file_get_contents($url);
-
-    // 👇 LOG DE RESPUESTA
-    log_message('info', 'WhatsApp response: ' . var_export($response, true));
-
-    if ($response === false) {
-        log_message('error', 'WhatsApp request failed (file_get_contents returned false)');
-    }
-}
 
 
     private function buildAdminWhatsApp(array $p): string
