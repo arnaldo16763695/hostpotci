@@ -421,36 +421,42 @@ class UsersController extends BaseController
 
     private function sendWhatsApp(string $recipient, string $message): void
     {
-        // Asegurar que el número no tenga +
+        // Normalizar número (TextMeBot no acepta +)
         $recipient = ltrim($recipient, '+');
 
-        // Validar mensaje
         if (trim($message) === '') {
             log_message('error', 'WhatsApp message vacío');
             return;
         }
 
+        $apiKey = env('whatsapp_api_key');
+
+        if (!$apiKey) {
+            log_message('error', 'WHATSAPP_API_KEY no definida');
+            return;
+        }
+
         $query = http_build_query([
             'recipient' => $recipient,
-            'apikey'    => env('whatsapp_api_key'),
+            'apikey'    => $apiKey,
             'text'      => $message,
         ]);
 
         $url = 'http://api.textmebot.com/send.php?' . $query;
 
-        // 👇 LOG DE URL COMPLETA
-        log_message('info', 'WhatsApp URL: ' . $url);
+        // Log útil pero sin exponer la API key
+        log_message('info', 'WhatsApp send to ' . $recipient);
 
-        // Envío
         $response = @file_get_contents($url);
 
-        // 👇 LOG DE RESPUESTA
-        log_message('info', 'WhatsApp response: ' . var_export($response, true));
-
         if ($response === false) {
-            log_message('error', 'WhatsApp request failed (file_get_contents returned false)');
+            log_message('error', 'WhatsApp request failed');
+            return;
         }
+
+        log_message('info', 'WhatsApp response: ' . strip_tags($response));
     }
+
 
 
     private function buildAdminWhatsApp(array $p): string
