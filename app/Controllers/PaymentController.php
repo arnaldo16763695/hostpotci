@@ -404,8 +404,9 @@ class PaymentController extends BaseController
                 $API        = new RouterosAPI();
                 $API->debug = false;
                 $API->port  = $port;
-
-                $mkconnec = [];
+                $userProfile = env('user_profile');
+                $hotspotServ = env('serv_hotspot');
+                // $mkconnec = [];
 
                 if ($API->connect($ip, $username, $password)) {
 
@@ -435,10 +436,10 @@ class PaymentController extends BaseController
                     } else {
                         //create user in mikrotik
                         $API->comm('/ip/hotspot/user/add', [
-                            'server'      => env('serv_hotspot'),
+                            'server'      => $hotspotServ,
                             'name'        => $payload['phone'],
                             'password'        => $payload['phone'],
-                            'profile'        => env('user_profile'),
+                            'profile'        => $userProfile,
                         ]);
                     }
 

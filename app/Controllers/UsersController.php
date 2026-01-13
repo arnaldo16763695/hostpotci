@@ -215,6 +215,7 @@ class UsersController extends BaseController
         $username = env('username_mikrotik');
         $password = env('password_mikrotik');
         $port     = env('port_mikrotik');
+      
 
         $API        = new RouterosAPI();
         $API->debug = false;
@@ -324,6 +325,8 @@ class UsersController extends BaseController
         $API        = new RouterosAPI();
         $API->debug = false;
         $API->port  = $port;
+        $userProfile =env('user_profile'); 
+        $hotspotServ =env('serv_hotspot'); 
 
         $userExist = [];
 
@@ -355,10 +358,10 @@ class UsersController extends BaseController
             } else {
                 //create user in mikrotik
                 $API->comm('/ip/hotspot/user/add', [
-                    'server'      => env('serv_hotspot'),
+                    'server'      => $hotspotServ,
                     'name'        => $userName,
                     'password'        => $userName,
-                    'profile'        => env('user_profile'),
+                    'profile'        =>  $userProfile,
                 ]);
             }
 
