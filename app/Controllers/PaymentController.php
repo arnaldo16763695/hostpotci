@@ -382,7 +382,7 @@ class PaymentController extends BaseController
 
                 switch ($plan) {
                     case '1000':
-                        $limitUptime = '01:00:00';
+                        $limitUptime = '00:10:00';
                         break;
                     case '3000':
                         $limitUptime = '24:00:00';
