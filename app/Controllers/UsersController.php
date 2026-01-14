@@ -195,7 +195,7 @@ class UsersController extends BaseController
         try {
             $query = http_build_query([
                 'recipient' => $recipient,
-                'apikey'    => env('WHATSAPP_API_KEY'),
+                'apikey'    => env('whatsapp_api_key'),
                 'text'      => $message,
             ]);
 
