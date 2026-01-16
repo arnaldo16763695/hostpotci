@@ -109,20 +109,7 @@
                                     <label class="form-check-label" for="10000">
                                         7 Días de Internet. $10.000
                                     </label>
-                                </div>
-
-                                <div class="form-check mb-2">
-                                    <input
-                                        class="form-check-input"
-                                        type="radio"
-                                        name="plan"
-                                        id="1000"
-                                        value="1000"
-                                        <?php if ($plan === '1000') echo 'checked'; ?>>
-                                    <label class="form-check-label" for="1000">
-                                        1 hora de Internet. $1.000
-                                    </label>
-                                </div>
+                                </div>                             
                             </div>
 
                             <?php if (session()->getFlashdata('errors') !== null): ?>
