@@ -171,33 +171,15 @@ class UsersController extends BaseController
             ]);
             // print_r($userExist);
             // exit;
-            if (isset($userExist[0]['.id'])) {
 
-                // check if user is active in hotspot
-                if ($userExist[0]['limit-uptime'] !== $userExist[0]['uptime']) {
+            //create user in mikrotik
+            $API->comm('/ip/hotspot/user/add', [
+                'server'      => $hotspotServ,
+                'name'        => $userName,
+                'password'        => $userName,
+                'profile'        =>  $userProfile,
+            ]);
 
-                    // Construir URL con parámetros GET
-                    $url = base_url('message-user-login') . '?' . http_build_query([
-                        'ip'  => $payload['ip'],
-                        'mac' => $payload['mac'],
-                    ]);
-                    session()->setFlashdata('user_loged', (string) 'Aún tienes una sessión activa, inicia con tu usuario');
-                    return redirect()->to($url);
-                }
-
-                //reset counter
-                $API->comm('/ip/hotspot/user/reset-counters', [
-                    '.id'          => $userExist[0]['.id'],
-                ]);
-            } else {
-                //create user in mikrotik
-                $API->comm('/ip/hotspot/user/add', [
-                    'server'      => $hotspotServ,
-                    'name'        => $userName,
-                    'password'        => $userName,
-                    'profile'        =>  $userProfile,
-                ]);
-            }
 
 
             //Connect user
@@ -335,7 +317,7 @@ class UsersController extends BaseController
         }
     }
 
-   
+
 
 
     private function sendEmailToAdmin(array $data): void

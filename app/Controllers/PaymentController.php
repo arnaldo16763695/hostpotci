@@ -404,7 +404,6 @@ class PaymentController extends BaseController
                 $API        = new RouterosAPI();
                 $API->debug = false;
                 $API->port  = $port;
-                $userProfile = env('user_profile');
                 $hotspotServ = env('serv_hotspot');
                 // $mkconnec = [];
 
@@ -414,48 +413,15 @@ class PaymentController extends BaseController
                         '?name'        => $payload['phone'],
                     ]);
 
-                    // print_r($userExist);
-                    // exit;
-                    if (isset($userExist[0]['.id'])) {
 
-                        // check if user is active in hotspot
-                        // if ($userExist[0]['limit-uptime'] !== $userExist[0]['uptime']) {
-
-                        //     // Construir URL con parámetros GET
-                        //     $url = base_url('message-user-login') . '?' . http_build_query([
-                        //         'ip'  => $payload['ip'],
-                        //         'mac' => $payload['mac'],
-                        //     ]);
-                        //     session()->setFlashdata('user_loged', (string) 'Aún tienes una sessión activa, inicia con tu usuario');
-                        //     return redirect()->to($url);
-                        // }
-
-                        //reset counter
-                        $API->comm('/ip/hotspot/user/reset-counters', [
-                            '.id'          => $userExist[0]['.id'],
-                        ]);
-                    } else {
-                        //create user in mikrotik
-                        $API->comm('/ip/hotspot/user/add', [
-                            'server'      => $hotspotServ,
-                            'name'        => $payload['phone'],
-                            'password'        => $payload['phone'],
-                            'profile'        => $userProfile,
-                        ]);
-                    }
-
-
-                    //set limit-uptime user in mikrotik
-                    // find user
-                    $res = $API->comm('/ip/hotspot/user/print', [
-                        '?name' => $payload['phone'],
-                        '.proplist' => '.id,name,limit-uptime'
+                    //create user in mikrotik
+                    $API->comm('/ip/hotspot/user/add', [
+                        'server'      => $hotspotServ,
+                        'name'        => $payload['phone'],
+                        'password'        => $payload['phone'],
+                        'profile'        => $userProfile,
                     ]);
 
-                    if (empty($res)) {
-                        log_message('error', "Hotspot user not found:" . $payload['phone']);
-                        return;
-                    }                  
 
                     //Connect user
                     $dataToConnection = [
@@ -570,7 +536,7 @@ class PaymentController extends BaseController
     private function planToDelay(string $plan): string
     {
         return match ($plan) {
-            '3000'  => '1d',
+            '3000'  => '10m',
             '5000'  => '2d',
             '10000' => '7d',
             '1000'  => '1h',
