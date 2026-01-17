@@ -544,34 +544,61 @@ class PaymentController extends BaseController
         };
     }
 
-    private function scheduleHotspotExpiry(RouterosAPI $API, string $userName, string $delay): void
-    {
-        $schedName = 'exp-' . $userName;
+   private function scheduleHotspotExpiry(RouterosAPI $API, string $userName, string $delay): void
+{
+    $schedName = 'exp-' . $userName;
 
-        // 1) limpia scheduler previo (si existe)
-        $old = $API->comm('/system/scheduler/print', ['?name' => $schedName, '.proplist' => '.id']);
-        if (!empty($old)) {
-            $API->comm('/system/scheduler/remove', ['.id' => $old[0]['.id']]);
-        }
+    // 1) obtener fecha/hora del router (evita desfase de zona horaria)
+    $clock = $API->comm('/system/clock/print');
+    $routerDate = $clock[0]['date'] ?? null; // ej: "jan/17/2026"
+    $routerTime = $clock[0]['time'] ?? null; // ej: "11:07:21"
 
-        // 2) programa inicio "ya" (10 segundos después)
-        $startDate = strtolower(date('M/d/Y')); // ej: jan/17/2026
-        $startTime = date('H:i:s', time() + 10);
+    if (!$routerDate || !$routerTime) {
+        log_message('error', 'No se pudo leer /system/clock/print en MikroTik');
+        return;
+    }
 
-        // 3) script de expiración (tiempo continuo)
-        $onEvent =
-            ":delay $delay; " .
-            "/ip hotspot active remove [find user=\"$userName\"]; " .
-            "/ip hotspot user remove [find name=\"$userName\"]; " .
-            "/system scheduler remove [find name=\"$schedName\"];";
+    // 2) sumar 10 segundos a la hora del router
+    [$h, $m, $s] = array_map('intval', explode(':', $routerTime));
+    $s += 10;
+    if ($s >= 60) { $s -= 60; $m += 1; }
+    if ($m >= 60) { $m -= 60; $h += 1; }
+    if ($h >= 24) { $h -= 24; } // si cruza de dia, para tus pruebas basta
 
-        $API->comm('/system/scheduler/add', [
-            'name'       => $schedName,
-            'start-date' => $startDate,
-            'start-time' => $startTime,
-            'interval'   => '1d',      // da igual: se borra al ejecutarse
-            'on-event'   => $onEvent,
-            'comment'    => 'Auto-expire for paid plan',
+    $startTime = sprintf('%02d:%02d:%02d', $h, $m, $s);
+
+    // 3) borrar scheduler anterior si existía
+    $old = $API->comm('/system/scheduler/print', [
+        '?name' => $schedName,
+        '.proplist' => '.id'
+    ]);
+    if (!empty($old[0]['.id'])) {
+        $API->comm('/system/scheduler/remove', [
+            '.id' => $old[0]['.id']
         ]);
     }
+
+    // 4) script: espera delay y expira al usuario
+    $onEvent =
+        ':log warning ("EXP-START user=' . $userName . ' delay=' . $delay . '"); ' .
+        ':delay ' . $delay . '; ' .
+        ':log warning ("EXP-KILL user=' . $userName . '"); ' .
+        '/ip hotspot active remove [find user="' . $userName . '"]; ' .
+        '/ip hotspot user remove [find name="' . $userName . '"]; ' .
+        '/system scheduler remove [find name="' . $schedName . '"];';
+
+    // 5) crear scheduler
+    $API->comm('/system/scheduler/add', [
+        'name'       => $schedName,
+        'start-date' => $routerDate,
+        'start-time' => $startTime,
+        'interval'   => '1d',               // no importa, se auto-borra
+        'policy'     => 'read,write,test',  // write necesario para borrar user
+        'on-event'   => $onEvent,
+        'comment'    => 'Auto-expire hotspot user',
+    ]);
+
+    log_message('info', "Scheduler creado: {$schedName} start {$routerDate} {$startTime} delay {$delay}");
+}
+
 }
