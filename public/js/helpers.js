@@ -5,6 +5,8 @@ const $plans = document.querySelectorAll('input[name="plan"]');
 const $macInput = document.getElementById("mac");
 const $ipInput = document.getElementById("ip");
 const $phoneInput = document.getElementById("phone");
+const $form = document.getElementById("hotspotForm");
+const $btn = document.getElementById("btnSubmit");
 
 // Check required elements
 if ($inputEmail && $linkTranference && $plans.length > 0) {
@@ -52,4 +54,12 @@ if ($inputEmail && $linkTranference && $plans.length > 0) {
   updateTransferLink();
 } else {
   console.warn("Required elements do not exist on this page.");
+}
+
+if ($form) {
+  $form.addEventListener("submit", () => {
+    $btn.disabled = true;
+    $btn.dataset.originalText = $btn.innerHTML;
+    $btn.innerHTML = "Procesando...";
+  });
 }

@@ -16,7 +16,7 @@ $error = session()->getFlashdata('hotspot_error');
                     <img src="<?= base_url('images/LogoGlobal-n.png') ?>" alt="Logo Globalsi" width="100" height="45">
                 </div>
                 <h5 class="card-title text-center fw-bold ">Selecciona el tiempo de Internet que deseas.</h5>
-                <form action="<?= base_url('createOrder') ?>" method="POST">
+                <form action="<?= base_url('createOrder') ?>" method="POST" id="hotspotForm">
                     <?= csrf_field(); ?>
                     <div class="mb-3  p-4">
                         <div class="mb-3">
@@ -58,7 +58,7 @@ $error = session()->getFlashdata('hotspot_error');
                         <input type="hidden" class="form-control" id="ip" name="ip" value="<?=  $ip ?>">
                         <input type="hidden" class="form-control" id="mac" name="mac" value="<?=  $mac ?>">
                         <div class="mb-3 mt-3 d-flex justify-content-between">
-                            <button type="submit" class="btn btn-primary">Pagar con tarjeta</button>
+                            <button type="submit" class="btn btn-primary" id="btnSubmit">Pagar con tarjeta</button>
                         </div>
 
                 </form>

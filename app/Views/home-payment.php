@@ -13,7 +13,7 @@
                     <img src="<?= base_url('images/LogoGlobal-n.png') ?>" alt="Logo Globalsi" width="100" height="45">
                 </div>
                 <!-- <h5 class="card-title text-center fw-bold ">Si ya estas registrado ingresa tu Nº de teléfono</h5> -->
-                <form action="<?= base_url('login-to-mik') ?>" method="POST">
+                <form action="<?= base_url('login-to-mik') ?>" method="POST" id="hotspotForm">
                     <?= csrf_field(); ?>
                     <div class="mb-3  p-4">
                         <div class="mb-3">
@@ -25,7 +25,7 @@
                         <input type="hidden" class="form-control" id="ip" name="ip" value="<?= $_POST['ip']; ?>">
                         <input type="hidden" class="form-control" id="mac" name="mac" value="<?= $_POST['mac']; ?>">
                         <div class="mb-3 mt-3 d-flex justify-content-end">
-                            <button type="submit" class="btn btn-primary">Conectar</button>
+                            <button type="submit" class="btn btn-primary" id="btnSubmit">Conectar</button>
                         </div>
 
                 </form> 

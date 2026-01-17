@@ -9,7 +9,7 @@
                 <div class="card-body p-4 p-md-5">
                     <h1 class="card-title font-weight-bold mb-4">Introduzca sus datos</h1>
 
-                    <form method="POST" action="<?= base_url('create-user-mikrotik') ?>" autocomplete="off">
+                    <form method="POST" action="<?= base_url('create-user-mikrotik') ?>" autocomplete="off" id="hotspotForm">
                         <?= csrf_field(); ?>
 
                         <div class="form-group mb-4">
@@ -162,7 +162,7 @@
                         </div>
 
                         <div class="mt-3 d-flex justify-content-end">
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-primary" id="btnSubmit">
                                 Enviar
                             </button>
                         </div>
