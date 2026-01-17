@@ -301,33 +301,18 @@ class UsersController extends BaseController
         $plan = trim($this->request->getPost('plan'));
         $userProfile = '';
 
-        // switch ($plan) {
-        //     case '1000':
-        //         $limitUptime = '00:10:00';
-        //         break;
-        //     case '3000':
-        //         $limitUptime = '24:00:00';
-        //         break;
-        //     case '5000':
-        //         $limitUptime = '48:00:00';
-        //         break;
-        //     case '10000':
-        //         $limitUptime = '168:00:00';
-        //         break;
-        // }
-
         switch ($plan) {
             case '1000':
-                $userProfile = 'user_1000';
+                $userProfile = 'perfil_1000';
                 break;
             case '3000':
-                $userProfile = 'user_3000';
+                $userProfile = 'perfil_3000';
                 break;
             case '5000':
-                $userProfile = 'user_5000';
+                $userProfile = 'perfil_5000';
                 break;
             case '10000':
-                $userProfile = 'user_10000';
+                $userProfile = 'perfil_10000';
                 break;
         }
 

@@ -47,12 +47,12 @@ $error = session()->getFlashdata('hotspot_error');
                                     7 Días de Internet. $10.000
                                 </label>
                             </div>
-                            <div class="p-2 form-check">
+                            <!-- <div class="p-2 form-check">
                                 <input class="form-check-input" type="radio" name="plan" id="1000" value="1000">
                                 <label class="form-check-label" for="1000">
                                     1 Hora de Internet. $1.000
                                 </label>
-                            </div>
+                            </div> -->
                         </div>
 
                         <input type="hidden" class="form-control" id="ip" name="ip" value="<?=  $ip ?>">
