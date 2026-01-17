@@ -27,7 +27,7 @@ class UsersController extends BaseController
         ]);
     }
 
- 
+
     public function loginToMikrotik()
     {
 
@@ -200,7 +200,7 @@ class UsersController extends BaseController
             }
 
 
-           //Connect user
+            //Connect user
 
             $dataToConnection = [
                 'user'  => trim($post['phone']), // this is phone but used as user 
@@ -334,6 +334,9 @@ class UsersController extends BaseController
             log_message('info', 'Hotspot login OK: ' . json_encode($params));
         }
     }
+
+   
+
 
     private function sendEmailToAdmin(array $data): void
     {

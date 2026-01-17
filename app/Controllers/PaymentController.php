@@ -378,20 +378,20 @@ class PaymentController extends BaseController
 
                 //  $userName = trim($this->request->getPost('phone'));
                 $plan = $payload['plan'];
-                $limitUptime = '';
+                $userProfile = '';
 
                 switch ($plan) {
                     case '1000':
-                        $limitUptime = '00:10:00';
+                        $userProfile = 'perfil_1000';
                         break;
                     case '3000':
-                        $limitUptime = '24:00:00';
+                        $userProfile = 'perfil_3000';
                         break;
                     case '5000':
-                        $limitUptime = '48:00:00';
+                        $userProfile = 'perfil_5000';
                         break;
                     case '10000':
-                        $limitUptime = '168:00:00';
+                        $userProfile = 'perfil_10000';
                         break;
                 }
 
@@ -413,6 +413,7 @@ class PaymentController extends BaseController
                     $userExist = $API->comm('/ip/hotspot/user/print', [
                         '?name'        => $payload['phone'],
                     ]);
+
                     // print_r($userExist);
                     // exit;
                     if (isset($userExist[0]['.id'])) {
@@ -454,17 +455,7 @@ class PaymentController extends BaseController
                     if (empty($res)) {
                         log_message('error', "Hotspot user not found:" . $payload['phone']);
                         return;
-                    }
-
-                    $userId = $res[0]['.id'];
-
-                    // Setear limit-uptime
-                    $API->comm('/ip/hotspot/user/set', [
-                        '.id'          => $userId,
-                        'limit-uptime' => $limitUptime,
-                    ]);
-
-                    log_message('info', "limit-uptime updated for" . $payload['phone'] . " to " . $limitUptime);
+                    }                  
 
                     //Connect user
                     $dataToConnection = [
@@ -474,6 +465,9 @@ class PaymentController extends BaseController
                     ];
 
                     $this->loginHotspot($dataToConnection);
+
+                    $delay = $this->planToDelay($plan); // 3000/5000/10000
+                    $this->scheduleHotspotExpiry($API, $payload['phone'], $delay);
 
 
                     $API->disconnect();
@@ -571,5 +565,47 @@ class PaymentController extends BaseController
         } else {
             log_message('info', 'Hotspot login OK: ' . json_encode($params));
         }
+    }
+
+    private function planToDelay(string $plan): string
+    {
+        return match ($plan) {
+            '3000'  => '1d',
+            '5000'  => '2d',
+            '10000' => '7d',
+            '1000'  => '1h',
+            default => '1h',
+        };
+    }
+
+    private function scheduleHotspotExpiry(RouterosAPI $API, string $userName, string $delay): void
+    {
+        $schedName = 'exp-' . $userName;
+
+        // 1) limpia scheduler previo (si existe)
+        $old = $API->comm('/system/scheduler/print', ['?name' => $schedName, '.proplist' => '.id']);
+        if (!empty($old)) {
+            $API->comm('/system/scheduler/remove', ['.id' => $old[0]['.id']]);
+        }
+
+        // 2) programa inicio "ya" (10 segundos después)
+        $startDate = strtolower(date('M/d/Y')); // ej: jan/17/2026
+        $startTime = date('H:i:s', time() + 10);
+
+        // 3) script de expiración (tiempo continuo)
+        $onEvent =
+            ":delay $delay; " .
+            "/ip hotspot active remove [find user=\"$userName\"]; " .
+            "/ip hotspot user remove [find name=\"$userName\"]; " .
+            "/system scheduler remove [find name=\"$schedName\"];";
+
+        $API->comm('/system/scheduler/add', [
+            'name'       => $schedName,
+            'start-date' => $startDate,
+            'start-time' => $startTime,
+            'interval'   => '1d',      // da igual: se borra al ejecutarse
+            'on-event'   => $onEvent,
+            'comment'    => 'Auto-expire for paid plan',
+        ]);
     }
 }
