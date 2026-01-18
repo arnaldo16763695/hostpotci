@@ -18,7 +18,20 @@
                     <div class="mb-3  p-4">
                         <div class="mb-3">
                             <label class="mb-2" for="email">Teléfono:</label>
-                            <input type="text" class="form-control" name="phone" id="phone" value="" required autofocus>
+                            <!-- <input type="text" class="form-control" name="phone" id="phone" value="" required autofocus> -->
+                            <input
+                                class="form-control"
+                                type="text"
+                                name="phone"
+                                required
+                                inputmode="numeric"
+                                autocomplete="tel"
+                                maxlength="9"
+                                pattern="^9[0-9]{8}$"
+                                title="Debe ser 9XXXXXXXX (9 dígitos, sin espacios)"
+                                autofocus
+                                id="phone">
+                                
                         </div>
 
 
@@ -28,7 +41,7 @@
                             <button type="submit" class="btn btn-primary" id="btnSubmit">Conectar</button>
                         </div>
 
-                </form> 
+                </form>
                 <div class="mb-3 mt-3 d-flex justify-content-center">
                     <a id="transference" href="<?= base_url('create-order-payment'); ?>?ip=<?= $_POST['ip']; ?>&mac=<?= $_POST['mac']; ?>" class="">
                         ¿ No estás registrado ? regístrate

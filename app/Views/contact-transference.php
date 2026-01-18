@@ -50,14 +50,27 @@
 
                         <div class="form-group mb-4">
                             <label for="phone">Teléfono</label>
-                            <input
+                            <!-- <input
                                 type="text"
                                 class="form-control"
                                 name="phone"
                                 id="phone"
-                                value="<?= $phone; ?>"
+                                value=""
                                 required
-                            >                        
+                            >                         -->
+                              <input
+                                class="form-control"
+                                type="text"
+                                name="phone"
+                                required
+                                inputmode="numeric"
+                                autocomplete="tel"
+                                maxlength="9"
+                                pattern="^9[0-9]{8}$"
+                                title="Debe ser 9XXXXXXXX (9 dígitos, sin espacios)"
+                                autofocus
+                                value="<?= $phone; ?>"
+                                id="phone">
                             <input
                                 type="hidden"
                                 class="form-control"

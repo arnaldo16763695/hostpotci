@@ -25,7 +25,19 @@ $error = session()->getFlashdata('hotspot_error');
                         </div>
                         <div class="mb-3">
                             <label class="mb-2" for="phone">Teléfono:</label>
-                            <input type="text" class="form-control" name="phone" id="phone" required>
+                            <!-- <input type="text" class="form-control" name="phone" id="phone" required> -->
+                            <input
+                                class="form-control"
+                                type="text"
+                                name="phone"
+                                required
+                                inputmode="numeric"
+                                autocomplete="tel"
+                                maxlength="9"
+                                pattern="^9[0-9]{8}$"
+                                title="Debe ser 9XXXXXXXX (9 dígitos, sin espacios)"
+                                autofocus
+                                id="phone">
                         </div>
                         <div class="d-flex flex-column  ">
 
@@ -55,8 +67,8 @@ $error = session()->getFlashdata('hotspot_error');
                             </div> -->
                         </div>
 
-                        <input type="hidden" class="form-control" id="ip" name="ip" value="<?=  $ip ?>">
-                        <input type="hidden" class="form-control" id="mac" name="mac" value="<?=  $mac ?>">
+                        <input type="hidden" class="form-control" id="ip" name="ip" value="<?= $ip ?>">
+                        <input type="hidden" class="form-control" id="mac" name="mac" value="<?= $mac ?>">
                         <div class="mb-3 mt-3 d-flex justify-content-between">
                             <button type="submit" class="btn btn-primary" id="btnSubmit">Pagar con tarjeta</button>
                         </div>
