@@ -321,7 +321,7 @@ class UsersController extends BaseController
     private function planToDelay(string $plan): string
     {
         return match ($plan) {
-            '3000'  => '10m',
+            '3000'  => '1d',
             '5000'  => '2d',
             '10000' => '7d',
             '1000'  => '1h',
