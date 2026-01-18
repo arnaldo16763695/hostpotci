@@ -32,7 +32,8 @@ class UsersController extends BaseController
     {
 
         $rules = [
-            'phone' => 'required|max_length[15]',
+            // 'phone' => 'required|max_length[15]',
+            'phone' => 'required|regex_match[/^9\d{8}$/]',
             'ip' => 'required|valid_ip',
         ];
 
@@ -106,7 +107,8 @@ class UsersController extends BaseController
     public function createUserMikrotik()
     {
         $rules = [
-            'phone' => 'required|max_length[15]',
+            // 'phone' => 'required|max_length[15]',
+            'phone' => 'required|regex_match[/^9\d{8}$/]',
             'ip' => 'required|valid_ip',
             'plan' => 'required',
         ];

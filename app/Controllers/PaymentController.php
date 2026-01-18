@@ -31,7 +31,8 @@ class PaymentController extends BaseController
     {
         $rules = [
             'email' => 'required|max_length[100]|valid_email',
-            'phone' => 'required|max_length[100]',
+            // 'phone' => 'required|max_length[100]',
+            'phone' => 'required|regex_match[/^9\d{8}$/]',
             'ip' => 'required|valid_ip',
             'mac' => 'required',
         ];
