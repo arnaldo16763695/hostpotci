@@ -17,7 +17,7 @@
                     <?= csrf_field(); ?>
                     <div class="mb-3  p-4">
                         <div class="mb-3">
-                            <label class="mb-2" for="email">Teléfono:</label>
+                            <label class="mb-2" for="email">Ingrese su número de teléfono:</label>
                             <!-- <input type="text" class="form-control" name="phone" id="phone" value="" required autofocus> -->
                             <input
                                 class="form-control"
@@ -42,11 +42,7 @@
                         </div>
 
                 </form>
-                <div class="mb-3 mt-3 d-flex justify-content-center">
-                    <a id="transference" href="<?= base_url('create-order-payment'); ?>?ip=<?= $_POST['ip']; ?>&mac=<?= $_POST['mac']; ?>" class="">
-                        ¿ No estás registrado ? regístrate
-                    </a>
-                </div>
+               
                 <?php if (session()->getFlashdata('errors') !== null): ?>
                     <div class="alert alert-danger my-3" role="alert">
                         <?= session()->getFlashdata(('errors'))  ?>
@@ -54,6 +50,11 @@
 
                 <?php endif; ?>
             </div>
+             <div class="mb-3 mt-3 d-flex justify-content-center">
+                    <a id="transference" href="<?= base_url('create-order-payment'); ?>?ip=<?= $_POST['ip']; ?>&mac=<?= $_POST['mac']; ?>" class="">
+                        ¿ No estás registrado ? regístrate
+                    </a>
+                </div>
         </div>
     </div>
 </div>
