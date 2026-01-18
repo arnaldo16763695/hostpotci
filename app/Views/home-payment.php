@@ -15,10 +15,19 @@
                 <!-- <h5 class="card-title text-center fw-bold ">Si ya estas registrado ingresa tu Nº de teléfono</h5> -->
                 <form action="<?= base_url('login-to-mik') ?>" method="POST" id="hotspotForm">
                     <?= csrf_field(); ?>
-                    <div class="mb-3  p-4">
+
+                    <!-- Mensaje superior -->
+                    <div class="alert alert-light border mb-3 p-3" role="alert">
+                        <small class="text-muted lh-sm d-block">
+                            Si ya te registraste, ingresa tu número y presiona <strong>Conectar</strong>.
+                            Si tu tiempo de internet ya venció, necesitas registrarte nuevamente con el mismo número.
+                        </small>
+                    </div>
+
+                    <div class="mb-3 p-4">
                         <div class="mb-3">
-                            <label class="mb-2" for="email">Ingrese su número de teléfono:</label>
-                            <!-- <input type="text" class="form-control" name="phone" id="phone" value="" required autofocus> -->
+                            <label class="mb-2" for="phone">Ingrese su número de teléfono:</label>
+
                             <input
                                 class="form-control"
                                 type="text"
@@ -31,18 +40,18 @@
                                 title="Debe ser 9XXXXXXXX (9 dígitos, sin espacios)"
                                 autofocus
                                 id="phone">
-                                
                         </div>
-
 
                         <input type="hidden" class="form-control" id="ip" name="ip" value="<?= $_POST['ip']; ?>">
                         <input type="hidden" class="form-control" id="mac" name="mac" value="<?= $_POST['mac']; ?>">
+
                         <div class="mb-3 mt-3 d-flex justify-content-end">
                             <button type="submit" class="btn btn-primary" id="btnSubmit">Conectar</button>
                         </div>
-
+                    </div>
                 </form>
-               
+
+
                 <?php if (session()->getFlashdata('errors') !== null): ?>
                     <div class="alert alert-danger my-3" role="alert">
                         <?= session()->getFlashdata(('errors'))  ?>
@@ -50,11 +59,11 @@
 
                 <?php endif; ?>
             </div>
-             <div class="mb-3 mt-3 d-flex justify-content-center">
-                    <a id="transference" href="<?= base_url('create-order-payment'); ?>?ip=<?= $_POST['ip']; ?>&mac=<?= $_POST['mac']; ?>" class="">
-                        ¿ No estás registrado ? regístrate
-                    </a>
-                </div>
+            <div class="mb-3 mt-3 d-flex justify-content-center">
+                <a id="transference" href="<?= base_url('create-order-payment'); ?>?ip=<?= $_POST['ip']; ?>&mac=<?= $_POST['mac']; ?>" class="">
+                    ¿ No estás registrado ? regístrate
+                </a>
+            </div>
         </div>
     </div>
 </div>
