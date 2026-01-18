@@ -33,6 +33,7 @@
                                 type="text"
                                 name="phone"
                                 required
+                                placeholder="9XXXXXXXX"
                                 inputmode="numeric"
                                 autocomplete="tel"
                                 maxlength="9"
