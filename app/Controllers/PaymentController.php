@@ -358,15 +358,19 @@ class PaymentController extends BaseController
 
             // Si el pago está PAGADO (status 2), aquí hacemos TODO:
             if ((int)$json_response['status'] === 2) {
-                $orderM = new OrdersModel();
 
-                // Actualizar la orden en tu BD
-                $orderM->where('codeOrder', $json_response['commerceOrder'])
-                    ->set([
-                        'status' => 'PAGADA',
-                        'email'  => $json_response['payer'],
-                    ])
-                    ->update();
+                try {
+                    $orderM = new OrdersModel();
+                    // Actualizar la orden en tu BD
+                    $orderM->where('codeOrder', $json_response['commerceOrder'])
+                        ->set([
+                            'status' => 'PAGADA',
+                            'email'  => $json_response['payer'],
+                        ])
+                        ->update();
+                } catch (\Throwable $e) {
+                    log_message('error', 'DB insert update: ' . $e->getMessage());
+                }
 
                 $payload = [
                     'email' => $json_response['payer'],
@@ -408,38 +412,79 @@ class PaymentController extends BaseController
                 $hotspotServ = env('serv_hotspot');
                 // $mkconnec = [];
 
-                if ($API->connect($ip, $username, $password)) {
+                if (!$API->connect($ip, $username, $password)) {
+                    log_message('error', 'No se pudo conectar a Mikrotik en createUserMikrotik()');
+                    return redirect()->back()->withInput()->with('errors', 'No se pudo conectar al router.');
+                }
 
+                try {
+                    // 1) Buscar si ya existe
                     $userExist = $API->comm('/ip/hotspot/user/print', [
-                        '?name'        => $payload['phone'],
+                        '?name'      => $payload['phone'],
+                        '.proplist'  => '.id,name,profile,server'
                     ]);
 
+                    // Si tu lib devuelve !trap, lo logueamos
+                    if (isset($userExist['!trap'])) {
+                        log_message('error', 'MikroTik user/print trap: ' . $userExist['!trap'][0]['message']);
+                        $userExist = [];
+                    }
 
-                    //create user in mikrotik
-                    $API->comm('/ip/hotspot/user/add', [
-                        'server'      => $hotspotServ,
-                        'name'        => $payload['phone'],
-                        'password'        => $payload['phone'],
-                        'profile'        => $userProfile,
-                    ]);
+                    if (!empty($userExist) && isset($userExist[0]['.id'])) {
+                        // 2) Si existe: actualizar (perfil/server/pass)
+                        $setRes = $API->comm('/ip/hotspot/user/set', [
+                            '.id'      => $userExist[0]['.id'],
+                            'server'   => $hotspotServ,
+                            'password' => $payload['phone'],
+                            'profile'  => $userProfile,
+                        ]);
 
+                        if (isset($setRes['!trap'])) {
+                            log_message('error', 'MikroTik user/set trap: ' . $setRes['!trap'][0]['message']);
+                        } else {
+                            log_message('info', "MikroTik user updated: {$payload['phone']}");
+                        }
+                    } else {
+                        // 3) Si no existe: crear
+                        $addRes = $API->comm('/ip/hotspot/user/add', [
+                            'server'   => $hotspotServ,
+                            'name'     => $payload['phone'],
+                            'password' => $payload['phone'],
+                            'profile'  => $userProfile,
+                        ]);
 
-                    //Connect user
-                    $dataToConnection = [
-                        'user'  => $payload['phone'], // this is phone but used as user 
-                        'password' => $payload['phone'], // this is phone but used as password
-                        'ip'    => $payload['ip'],
+                        if (isset($addRes['!trap'])) {
+                            log_message('error', 'MikroTik user/add trap: ' . $addRes['!trap'][0]['message']);
+                        } else {
+                            log_message('info', "MikroTik user created: {$payload['phone']}");
+                        }
+                    }
+
+                    // 4) Login (misma conexión)
+                    $loginParams = [
+                        'user'     => $payload['phone'],
+                        'password' => $payload['phone'],
                     ];
+                    if (!empty($ipUser)) {
+                        $loginParams['ip'] = $ipUser; // IMPORTANTE: tu parámetro correcto es "ip"
+                    }
 
-                    $this->loginHotspot($dataToConnection);
+                    $loginRes = $API->comm('/ip/hotspot/active/login', $loginParams);
 
-                    $delay = $this->planToDelay($plan); // 3000/5000/10000
+                    if (isset($loginRes['!trap'])) {
+                        log_message('error', 'Hotspot login trap: ' . $loginRes['!trap'][0]['message']);
+                    } else {
+                        log_message('info', 'Hotspot login OK user=' . $payload['phone'] . ' ip=' . ($ipUser ?? ''));
+                    }
+
+                    // 5) Scheduler expiración continua (misma conexión)
+                    $delay = $this->planToDelay($plan); // 1000/3000/5000/10000 -> 1h/1d/2d/7d
                     $this->scheduleHotspotExpiry($API, $payload['phone'], $delay);
-
-
+                } catch (\Throwable $e) {
+                    log_message('error', 'createUserMikrotik() exception: ' . $e->getMessage());
                     $API->disconnect();
-                } else {
-                    log_message('error', 'No se pudo conectar a Mikrotik en confirmation()');
+
+                    return redirect()->back()->withInput()->with('errors', 'Ocurrió un error procesando la solicitud.');
                 }
             }
             return $this->response->setStatusCode(200)->setBody('OK');
