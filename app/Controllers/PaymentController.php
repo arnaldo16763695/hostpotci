@@ -464,11 +464,9 @@ class PaymentController extends BaseController
                     $loginParams = [
                         'user'     => $payload['phone'],
                         'password' => $payload['phone'],
+                        'ip' => $payload['ip'],
                     ];
-                    if (!empty($ipUser)) {
-                        $loginParams['ip'] = $ipUser; // IMPORTANTE: tu parámetro correcto es "ip"
-                    }
-
+                   
                     $loginRes = $API->comm('/ip/hotspot/active/login', $loginParams);
 
                     if (isset($loginRes['!trap'])) {
@@ -545,39 +543,7 @@ class PaymentController extends BaseController
         }
 
         return $json;
-    }
-
-    private function loginHotspot(array $p): void
-    {
-        $API = new RouterosAPI();
-        $API->debug = false;
-        $API->port  = env('port_mikrotik');
-
-        if (!$API->connect(
-            env('ip_mikrotik'),
-            env('username_mikrotik'),
-            env('password_mikrotik')
-        )) {
-            log_message('error', 'No se pudo conectar a Mikrotik');
-            return;
-        }
-
-        $params = [
-            'user'     => $p['user'],
-            'password' => $p['password'],
-            'ip' => $p['ip'],
-        ];
-
-        $res = $API->comm('/ip/hotspot/active/login', $params);
-        $API->disconnect();
-
-        if (isset($res['!trap'])) {
-            log_message('error', 'Hotspot login error: ' . $res['!trap'][0]['message']);
-            log_message('error', 'Params sent: ' . json_encode($params));
-        } else {
-            log_message('info', 'Hotspot login OK: ' . json_encode($params));
-        }
-    }
+    }   
 
     private function planToDelay(string $plan): string
     {
