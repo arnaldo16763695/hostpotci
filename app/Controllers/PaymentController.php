@@ -646,7 +646,7 @@ class PaymentController extends BaseController
             'name'       => $schedName,
             'start-date' => $routerDate,
             'start-time' => $startTime,
-            'interval'   => '1d',               // no importa, se auto-borra
+            'interval'   => $delay,               // no importa, se auto-borra
             'policy'     => 'read,write,test',  // write necesario para borrar user
             'on-event'   => $onEvent,
             'comment'    => 'Auto-expire hotspot user',
