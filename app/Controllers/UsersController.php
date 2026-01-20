@@ -216,199 +216,198 @@ class UsersController extends BaseController
     // }
 
     public function createUserMikrotik()
-{
-    $rules = [
-        'phone' => [
-            'rules'  => 'required|regex_match[/^9\d{8}$/]',
-            'errors' => [
-                'required'    => 'El teléfono es obligatorio.',
-                'regex_match' => 'Ingrese un número celular válido (ej: 9XXXXXXXX).',
-            ]
-        ],
-        'ip' => [
-            'rules'  => 'required|valid_ip',
-            'errors' => [
-                'required' => 'La IP es obligatoria.',
-                'valid_ip' => 'La IP no es válida.',
-            ]
-        ],
-        'plan' => [
-            'rules'  => 'required|in_list[1000,3000,5000,10000]',
-            'errors' => [
-                'required' => 'Debe seleccionar un plan.',
-                'in_list'  => 'Plan inválido.',
-            ]
-        ],
-        // Si estos campos siempre vienen en tu POST, vale la pena validarlos:
-        'mac' => [
-            'rules'  => 'required|regex_match[/^([A-Fa-f0-9]{2}:){5}[A-Fa-f0-9]{2}$/]',
-            'errors' => [
-                'required'    => 'La MAC es obligatoria.',
-                'regex_match' => 'La MAC no es válida (XX:XX:XX:XX:XX:XX).',
-            ]
-        ],
-        'email' => [
-            'rules'  => 'permit_empty|valid_email|max_length[100]',
-            'errors' => [
-                'valid_email' => 'Debe ingresar un email válido.',
-            ]
-        ],
-        'name' => [
-            'rules'  => 'permit_empty|min_length[3]|max_length[100]|alpha_space',
-            'errors' => [
-                'min_length'  => 'El nombre debe tener al menos 3 caracteres.',
-                'alpha_space' => 'El nombre solo puede contener letras y espacios.',
-            ]
-        ],
-        'rut' => [
-            'rules'  => 'permit_empty|min_length[7]|max_length[12]',
-            'errors' => [
-                'min_length' => 'El RUT parece demasiado corto.',
-            ]
-        ],
-    ];
-
-    if (!$this->validate($rules)) {
-        return redirect()->back()->withInput()->with('errors', $this->validator->listErrors());
-    }
-
-    $post = $this->request->getPost();
-
-    $userName = trim($post['phone']); // user = phone
-    $plan     = trim($post['plan']);
-    $ipUser   = $post['ip'] ?? null;
-
-    // Plan -> profile
-    $userProfile = match ($plan) {
-        '1000'  => 'perfil_1000',
-        '3000'  => 'perfil_3000',
-        '5000'  => 'perfil_5000',
-        '10000' => 'perfil_10000',
-        default => '',
-    };
-
-    if (empty($userProfile)) {
-        log_message('error', 'Plan sin perfil. plan=' . json_encode($plan));
-        return redirect()->back()->withInput()->with('errors', 'Plan inválido.');
-    }
-
-    // Payload para tus notificaciones
-    $payload = [
-        'name'  => $post['name']  ?? '',
-        'email' => $post['email'] ?? '',
-        'phone' => $post['phone'],
-        'rut'   => $post['rut']   ?? '',
-        'plan'  => $post['plan'],
-        'mac'   => $post['mac'],
-        'ip'    => $post['ip'] ?? null,
-    ];
-
-    // Guardar en DB (tal como lo tienes)
-    try {
-        $userTM = new UsersTransferenceModel();
-        $userTM->insert($payload);
-    } catch (\Throwable $e) {
-        log_message('error', 'DB insert failed createUserMikrotik(): ' . $e->getMessage());
-        // Puedes decidir si continúas o cortas
-    }
-
-    // MikroTik connection
-    $ip       = env('ip_mikrotik');
-    $username = env('username_mikrotik');
-    $password = env('password_mikrotik');
-    $port     = (int) env('port_mikrotik');
-    $hotspotServ = env('serv_hotspot');
-
-    $API = new RouterosAPI();
-    $API->debug = false;
-    $API->port  = $port;
-
-    if (!$API->connect($ip, $username, $password)) {
-        log_message('error', 'No se pudo conectar a Mikrotik en createUserMikrotik()');
-        return redirect()->back()->withInput()->with('errors', 'No se pudo conectar al router.');
-    }
-
-    try {
-        // 1) Buscar si ya existe
-        $userExist = $API->comm('/ip/hotspot/user/print', [
-            '?name'      => $userName,
-            '.proplist'  => '.id,name,profile,server'
-        ]);
-
-        // Si tu lib devuelve !trap, lo logueamos
-        if (isset($userExist['!trap'])) {
-            log_message('error', 'MikroTik user/print trap: ' . $userExist['!trap'][0]['message']);
-            $userExist = [];
-        }
-
-        if (!empty($userExist) && isset($userExist[0]['.id'])) {
-            // 2) Si existe: actualizar (perfil/server/pass)
-            $setRes = $API->comm('/ip/hotspot/user/set', [
-                '.id'      => $userExist[0]['.id'],
-                'server'   => $hotspotServ,
-                'password' => $userName,
-                'profile'  => $userProfile,
-            ]);
-
-            if (isset($setRes['!trap'])) {
-                log_message('error', 'MikroTik user/set trap: ' . $setRes['!trap'][0]['message']);
-            } else {
-                log_message('info', "MikroTik user updated: {$userName}");
-            }
-        } else {
-            // 3) Si no existe: crear
-            $addRes = $API->comm('/ip/hotspot/user/add', [
-                'server'   => $hotspotServ,
-                'name'     => $userName,
-                'password' => $userName,
-                'profile'  => $userProfile,
-            ]);
-
-            if (isset($addRes['!trap'])) {
-                log_message('error', 'MikroTik user/add trap: ' . $addRes['!trap'][0]['message']);
-            } else {
-                log_message('info', "MikroTik user created: {$userName}");
-            }
-        }
-
-        // 4) Login (misma conexión)
-        $loginParams = [
-            'user'     => $userName,
-            'password' => $userName,
+    {
+        $rules = [
+            'phone' => [
+                'rules'  => 'required|regex_match[/^9\d{8}$/]',
+                'errors' => [
+                    'required'    => 'El teléfono es obligatorio.',
+                    'regex_match' => 'Ingrese un número celular válido (ej: 9XXXXXXXX).',
+                ]
+            ],
+            'ip' => [
+                'rules'  => 'required|valid_ip',
+                'errors' => [
+                    'required' => 'La IP es obligatoria.',
+                    'valid_ip' => 'La IP no es válida.',
+                ]
+            ],
+            'plan' => [
+                'rules'  => 'required|in_list[1000,3000,5000,10000]',
+                'errors' => [
+                    'required' => 'Debe seleccionar un plan.',
+                    'in_list'  => 'Plan inválido.',
+                ]
+            ],
+            // Si estos campos siempre vienen en tu POST, vale la pena validarlos:
+            'mac' => [
+                'rules'  => 'required|regex_match[/^([A-Fa-f0-9]{2}:){5}[A-Fa-f0-9]{2}$/]',
+                'errors' => [
+                    'required'    => 'La MAC es obligatoria.',
+                    'regex_match' => 'La MAC no es válida (XX:XX:XX:XX:XX:XX).',
+                ]
+            ],
+            'email' => [
+                'rules'  => 'permit_empty|valid_email|max_length[100]',
+                'errors' => [
+                    'valid_email' => 'Debe ingresar un email válido.',
+                ]
+            ],
+            'name' => [
+                'rules'  => 'permit_empty|min_length[3]|max_length[100]|alpha_space',
+                'errors' => [
+                    'min_length'  => 'El nombre debe tener al menos 3 caracteres.',
+                    'alpha_space' => 'El nombre solo puede contener letras y espacios.',
+                ]
+            ],
+            'rut' => [
+                'rules'  => 'permit_empty|min_length[7]|max_length[12]',
+                'errors' => [
+                    'min_length' => 'El RUT parece demasiado corto.',
+                ]
+            ],
         ];
-        if (!empty($ipUser)) {
-            $loginParams['ip'] = $ipUser; // IMPORTANTE: tu parámetro correcto es "ip"
+
+        if (!$this->validate($rules)) {
+            return redirect()->back()->withInput()->with('errors', $this->validator->listErrors());
         }
 
-        $loginRes = $API->comm('/ip/hotspot/active/login', $loginParams);
+        $post = $this->request->getPost();
 
-        if (isset($loginRes['!trap'])) {
-            log_message('error', 'Hotspot login trap: ' . $loginRes['!trap'][0]['message']);
-        } else {
-            log_message('info', 'Hotspot login OK user=' . $userName . ' ip=' . ($ipUser ?? ''));
+        $userName = trim($post['phone']); // user = phone
+        $plan     = trim($post['plan']);
+        $ipUser   = $post['ip'] ?? null;
+
+        // Plan -> profile
+        $userProfile = match ($plan) {
+            '1000'  => 'perfil_1000',
+            '3000'  => 'perfil_3000',
+            '5000'  => 'perfil_5000',
+            '10000' => 'perfil_10000',
+            default => '',
+        };
+
+        if (empty($userProfile)) {
+            log_message('error', 'Plan sin perfil. plan=' . json_encode($plan));
+            return redirect()->back()->withInput()->with('errors', 'Plan inválido.');
         }
 
-        // 5) Scheduler expiración continua (misma conexión)
-        $delay = $this->planToDelay($plan); // 1000/3000/5000/10000 -> 1h/1d/2d/7d
-        $this->scheduleHotspotExpiry($API, $userName, $delay);
+        // Payload para tus notificaciones
+        $payload = [
+            'name'  => $post['name']  ?? '',
+            'email' => $post['email'] ?? '',
+            'phone' => $post['phone'],
+            'rut'   => $post['rut']   ?? '',
+            'plan'  => $post['plan'],
+            'mac'   => $post['mac'],
+            'ip'    => $post['ip'] ?? null,
+        ];
 
-        // 6) Notificaciones (no rompen el flujo)
-        $this->sendWhatsApp(env('recipient'), $this->buildAdminWhatsApp($payload));
-        $this->sendEmailToAdmin($payload);
-        $this->sendEmailToCliente($payload);
+        // Guardar en DB (tal como lo tienes)
+        try {
+            $userTM = new UsersTransferenceModel();
+            $userTM->insert($payload);
+        } catch (\Throwable $e) {
+            log_message('error', 'DB insert failed createUserMikrotik(): ' . $e->getMessage());
+            // Puedes decidir si continúas o cortas
+        }
 
-    } catch (\Throwable $e) {
-        log_message('error', 'createUserMikrotik() exception: ' . $e->getMessage());
+        // MikroTik connection
+        $ip       = env('ip_mikrotik');
+        $username = env('username_mikrotik');
+        $password = env('password_mikrotik');
+        $port     = (int) env('port_mikrotik');
+        $hotspotServ = env('serv_hotspot');
+
+        $API = new RouterosAPI();
+        $API->debug = false;
+        $API->port  = $port;
+
+        if (!$API->connect($ip, $username, $password)) {
+            log_message('error', 'No se pudo conectar a Mikrotik en createUserMikrotik()');
+            return redirect()->back()->withInput()->with('errors', 'No se pudo conectar al router.');
+        }
+
+        try {
+            // 1) Buscar si ya existe
+            $userExist = $API->comm('/ip/hotspot/user/print', [
+                '?name'      => $userName,
+                '.proplist'  => '.id,name,profile,server'
+            ]);
+
+            // Si tu lib devuelve !trap, lo logueamos
+            if (isset($userExist['!trap'])) {
+                log_message('error', 'MikroTik user/print trap: ' . $userExist['!trap'][0]['message']);
+                $userExist = [];
+            }
+
+            if (!empty($userExist) && isset($userExist[0]['.id'])) {
+                // 2) Si existe: actualizar (perfil/server/pass)
+                $setRes = $API->comm('/ip/hotspot/user/set', [
+                    '.id'      => $userExist[0]['.id'],
+                    'server'   => $hotspotServ,
+                    'password' => $userName,
+                    'profile'  => $userProfile,
+                ]);
+
+                if (isset($setRes['!trap'])) {
+                    log_message('error', 'MikroTik user/set trap: ' . $setRes['!trap'][0]['message']);
+                } else {
+                    log_message('info', "MikroTik user updated: {$userName}");
+                }
+            } else {
+                // 3) Si no existe: crear
+                $addRes = $API->comm('/ip/hotspot/user/add', [
+                    'server'   => $hotspotServ,
+                    'name'     => $userName,
+                    'password' => $userName,
+                    'profile'  => $userProfile,
+                ]);
+
+                if (isset($addRes['!trap'])) {
+                    log_message('error', 'MikroTik user/add trap: ' . $addRes['!trap'][0]['message']);
+                } else {
+                    log_message('info', "MikroTik user created: {$userName}");
+                }
+            }
+
+            // 4) Login (misma conexión)
+            $loginParams = [
+                'user'     => $userName,
+                'password' => $userName,
+            ];
+            if (!empty($ipUser)) {
+                $loginParams['ip'] = $ipUser; // IMPORTANTE: tu parámetro correcto es "ip"
+            }
+
+            $loginRes = $API->comm('/ip/hotspot/active/login', $loginParams);
+
+            if (isset($loginRes['!trap'])) {
+                log_message('error', 'Hotspot login trap: ' . $loginRes['!trap'][0]['message']);
+            } else {
+                log_message('info', 'Hotspot login OK user=' . $userName . ' ip=' . ($ipUser ?? ''));
+            }
+
+            // 5) Scheduler expiración continua (misma conexión)
+            $delay = $this->planToDelay($plan); // 1000/3000/5000/10000 -> 1h/1d/2d/7d
+            $this->scheduleHotspotExpiry($API, $userName, $delay);
+
+            // 6) Notificaciones (no rompen el flujo)
+            $this->sendWhatsApp(env('recipient'), $this->buildAdminWhatsApp($payload));
+            $this->sendEmailToAdmin($payload);
+            $this->sendEmailToCliente($payload);
+        } catch (\Throwable $e) {
+            log_message('error', 'createUserMikrotik() exception: ' . $e->getMessage());
+            $API->disconnect();
+
+            return redirect()->back()->withInput()->with('errors', 'Ocurrió un error procesando la solicitud.');
+        }
+
         $API->disconnect();
 
-        return redirect()->back()->withInput()->with('errors', 'Ocurrió un error procesando la solicitud.');
+        // Redirigir fuera del sitio
+        return redirect()->to('https://google.com');
     }
-
-    $API->disconnect();
-
-    // Redirigir fuera del sitio
-    return redirect()->to('https://google.com');
-}
 
 
     private function sendWhatsApp(string $recipient, string $message): void
@@ -527,49 +526,85 @@ class UsersController extends BaseController
         };
     }
 
+    // private function scheduleHotspotExpiry(RouterosAPI $API, string $userName, string $delay): void
+    // {
+    //     $schedName = 'exp-' . $userName;
+
+    //     // 1) obtener fecha/hora del router (evita desfase de zona horaria)
+    //     $clock = $API->comm('/system/clock/print');
+    //     $routerDate = $clock[0]['date'] ?? null; // ej: "jan/17/2026"
+    //     $routerTime = $clock[0]['time'] ?? null; // ej: "11:07:21"
+
+    //     if (!$routerDate || !$routerTime) {
+    //         log_message('error', 'No se pudo leer /system/clock/print en MikroTik');
+    //         return;
+    //     }
+
+    //     // 2) sumar 10 segundos a la hora del router
+    //     [$h, $m, $s] = array_map('intval', explode(':', $routerTime));
+    //     $s += 10;
+    //     if ($s >= 60) {
+    //         $s -= 60;
+    //         $m += 1;
+    //     }
+    //     if ($m >= 60) {
+    //         $m -= 60;
+    //         $h += 1;
+    //     }
+    //     if ($h >= 24) {
+    //         $h -= 24;
+    //     } // si cruza de dia, para tus pruebas basta
+
+    //     $startTime = sprintf('%02d:%02d:%02d', $h, $m, $s);
+
+    //     // 3) borrar scheduler anterior si existía
+    //     $old = $API->comm('/system/scheduler/print', [
+    //         '?name' => $schedName,
+    //         '.proplist' => '.id'
+    //     ]);
+    //     if (!empty($old[0]['.id'])) {
+    //         $API->comm('/system/scheduler/remove', [
+    //             '.id' => $old[0]['.id']
+    //         ]);
+    //     }
+
+    //     // 4) script: espera delay y expira al usuario
+    //     $onEvent =
+    //         ':log warning ("EXP-START user=' . $userName . ' delay=' . $delay . '"); ' .
+    //         ':delay ' . $delay . '; ' .
+    //         ':log warning ("EXP-KILL user=' . $userName . '"); ' .
+    //         '/ip hotspot active remove [find user="' . $userName . '"]; ' .
+    //         '/ip hotspot user remove [find name="' . $userName . '"]; ' .
+    //         '/system scheduler remove [find name="' . $schedName . '"];';
+
+    //     // 5) crear scheduler
+    //     $API->comm('/system/scheduler/add', [
+    //         'name'       => $schedName,
+    //         'start-date' => $routerDate,
+    //         'start-time' => $startTime,
+    //         'interval'   => $delay,               // no importa, se auto-borra
+    //         'policy'     => 'read,write,test',  // write necesario para borrar user
+    //         'on-event'   => $onEvent,
+    //         'comment'    => 'Auto-expire hotspot user',
+    //     ]);
+
+    //     log_message('info', "Scheduler creado: {$schedName} start {$routerDate} {$startTime} delay {$delay}");
+    // }
+
     private function scheduleHotspotExpiry(RouterosAPI $API, string $userName, string $delay): void
     {
         $schedName = 'exp-' . $userName;
 
-        // 1) obtener fecha/hora del router (evita desfase de zona horaria)
-        $clock = $API->comm('/system/clock/print');
-        $routerDate = $clock[0]['date'] ?? null; // ej: "jan/17/2026"
-        $routerTime = $clock[0]['time'] ?? null; // ej: "11:07:21"
-
-        if (!$routerDate || !$routerTime) {
-            log_message('error', 'No se pudo leer /system/clock/print en MikroTik');
-            return;
-        }
-
-        // 2) sumar 10 segundos a la hora del router
-        [$h, $m, $s] = array_map('intval', explode(':', $routerTime));
-        $s += 10;
-        if ($s >= 60) {
-            $s -= 60;
-            $m += 1;
-        }
-        if ($m >= 60) {
-            $m -= 60;
-            $h += 1;
-        }
-        if ($h >= 24) {
-            $h -= 24;
-        } // si cruza de dia, para tus pruebas basta
-
-        $startTime = sprintf('%02d:%02d:%02d', $h, $m, $s);
-
-        // 3) borrar scheduler anterior si existía
+        // 1) borrar scheduler anterior si existía
         $old = $API->comm('/system/scheduler/print', [
             '?name' => $schedName,
             '.proplist' => '.id'
         ]);
         if (!empty($old[0]['.id'])) {
-            $API->comm('/system/scheduler/remove', [
-                '.id' => $old[0]['.id']
-            ]);
+            $API->comm('/system/scheduler/remove', ['.id' => $old[0]['.id']]);
         }
 
-        // 4) script: espera delay y expira al usuario
+        // 2) script: espera delay y expira al usuario (tiempo continuo desde el primer login)
         $onEvent =
             ':log warning ("EXP-START user=' . $userName . ' delay=' . $delay . '"); ' .
             ':delay ' . $delay . '; ' .
@@ -578,19 +613,19 @@ class UsersController extends BaseController
             '/ip hotspot user remove [find name="' . $userName . '"]; ' .
             '/system scheduler remove [find name="' . $schedName . '"];';
 
-        // 5) crear scheduler
+        // 3) crear scheduler que INICIA ya (startup) y se auto-borra al final
         $API->comm('/system/scheduler/add', [
             'name'       => $schedName,
-            'start-date' => $routerDate,
-            'start-time' => $startTime,
-            'interval'   => $delay,               // no importa, se auto-borra
-            'policy'     => 'read,write,test',  // write necesario para borrar user
+            'start-time' => 'startup',     // ✅ corre inmediatamente
+            'interval'   => '0s',          // ✅ no recurrente
+            'policy'     => 'read,write,test',
             'on-event'   => $onEvent,
             'comment'    => 'Auto-expire hotspot user',
         ]);
 
-        log_message('info', "Scheduler creado: {$schedName} start {$routerDate} {$startTime} delay {$delay}");
+        log_message('info', "Scheduler creado: {$schedName} (startup) delay {$delay}");
     }
+
 
 
 
