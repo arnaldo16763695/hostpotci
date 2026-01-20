@@ -20,20 +20,24 @@
                                 name="name"
                                 id="name"
                                 value=""
-                                required
-                            >
+                                required>
                         </div>
 
                         <div class="form-group mb-4">
                             <label for="rut">Rut</label>
+
+
                             <input
-                                type="text"
-                                class="form-control"
-                                name="rut"
                                 id="rut"
-                                value=""
+                                name="rut"
+                                class="form-control"
+                                type="text"
                                 required
-                            >
+                                minlength="8"
+                                maxlength="12"
+                                autocomplete="off" />
+
+
                         </div>
 
                         <div class="form-group mb-4">
@@ -44,8 +48,7 @@
                                 name="email"
                                 id="email"
                                 value="<?= $email; ?>"
-                                required
-                            >
+                                required>
                         </div>
 
                         <div class="form-group mb-4">
@@ -58,7 +61,7 @@
                                 value=""
                                 required
                             >                         -->
-                              <input
+                            <input
                                 class="form-control"
                                 type="text"
                                 name="phone"
@@ -76,15 +79,13 @@
                                 class="form-control"
                                 name="mac"
                                 id="mac"
-                                value="<?= $mac; ?>"
-                            >                        
+                                value="<?= $mac; ?>">
                             <input
                                 type="hidden"
                                 class="form-control"
                                 name="ip"
                                 id="ip"
-                                value="<?= $ip; ?>"
-                            >                        
+                                value="<?= $ip; ?>">
                         </div>
 
                         <div class="form-group mb-4">
@@ -98,8 +99,7 @@
                                         name="plan"
                                         id="3000"
                                         value="3000"
-                                        <?php if ($plan === '3000') echo 'checked'; ?>
-                                    >
+                                        <?php if ($plan === '3000') echo 'checked'; ?>>
                                     <label class="form-check-label" for="3000">
                                         1 Día de Internet. $3.000
                                     </label>
@@ -112,8 +112,7 @@
                                         name="plan"
                                         id="5000"
                                         value="5000"
-                                        <?php if ($plan === '5000') echo 'checked'; ?>
-                                    >
+                                        <?php if ($plan === '5000') echo 'checked'; ?>>
                                     <label class="form-check-label" for="5000">
                                         2 Días de Internet. $5.000
                                     </label>
@@ -126,12 +125,11 @@
                                         name="plan"
                                         id="10000"
                                         value="10000"
-                                        <?php if ($plan === '10000') echo 'checked'; ?>
-                                    >
+                                        <?php if ($plan === '10000') echo 'checked'; ?>>
                                     <label class="form-check-label" for="10000">
                                         7 Días de Internet. $10.000
                                     </label>
-                                </div>                       
+                                </div>
                             </div>
 
                             <?php if (session()->getFlashdata('errors') !== null): ?>
@@ -141,7 +139,7 @@
                             <?php endif; ?>
                         </div>
 
-                         <div class="mb-4">
+                        <div class="mb-4">
                             <div class="card border-info shadow-sm">
                                 <div class="card-body p-3">
 

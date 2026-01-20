@@ -248,20 +248,20 @@ class UsersController extends BaseController
                 ]
             ],
             'email' => [
-                'rules'  => 'permit_empty|valid_email|max_length[100]',
+                'rules'  => 'required',
                 'errors' => [
                     'valid_email' => 'Debe ingresar un email válido.',
                 ]
             ],
             'name' => [
-                'rules'  => 'permit_empty|min_length[3]|max_length[100]|alpha_space',
+                'rules'  => 'required',
                 'errors' => [
                     'min_length'  => 'El nombre debe tener al menos 3 caracteres.',
                     'alpha_space' => 'El nombre solo puede contener letras y espacios.',
                 ]
             ],
             'rut' => [
-                'rules'  => 'permit_empty|min_length[7]|max_length[12]',
+                'rules'  => 'required',
                 'errors' => [
                     'min_length' => 'El RUT parece demasiado corto.',
                 ]
