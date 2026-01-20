@@ -625,16 +625,40 @@ class PaymentController extends BaseController
     {
         $schedName = 'exp-' . $userName;
 
-        // 1) borrar scheduler anterior si existía
-        $old = $API->comm('/system/scheduler/print', [
-            '?name' => $schedName,
-            '.proplist' => '.id'
-        ]);
-        if (!empty($old[0]['.id'])) {
+        // 1) leer hora del router
+        $clock = $API->comm('/system/clock/print');
+        $routerDate = $clock[0]['date'] ?? null; // ej: "jan/19/2026"
+        $routerTime = $clock[0]['time'] ?? null; // ej: "22:31:05"
+
+        if (!$routerDate || !$routerTime) {
+            log_message('error', 'No se pudo leer /system/clock/print');
+            return;
+        }
+
+        // 2) sumar 5 segundos
+        [$h, $m, $s] = array_map('intval', explode(':', $routerTime));
+        $s += 5;
+        if ($s >= 60) {
+            $s -= 60;
+            $m += 1;
+        }
+        if ($m >= 60) {
+            $m -= 60;
+            $h += 1;
+        }
+        if ($h >= 24) {
+            $h -= 24;
+        } // para tu caso basta
+
+        $startTime = sprintf('%02d:%02d:%02d', $h, $m, $s);
+
+        // 3) borrar scheduler anterior si existe
+        $old = $API->comm('/system/scheduler/print', ['?name' => $schedName, '.proplist' => '.id']);
+        if (!empty($old) && !empty($old[0]['.id'])) {
             $API->comm('/system/scheduler/remove', ['.id' => $old[0]['.id']]);
         }
 
-        // 2) script: espera delay y expira al usuario (tiempo continuo desde el primer login)
+        // 4) evento
         $onEvent =
             ':log warning ("EXP-START user=' . $userName . ' delay=' . $delay . '"); ' .
             ':delay ' . $delay . '; ' .
@@ -643,16 +667,18 @@ class PaymentController extends BaseController
             '/ip hotspot user remove [find name="' . $userName . '"]; ' .
             '/system scheduler remove [find name="' . $schedName . '"];';
 
-        // 3) crear scheduler que INICIA ya (startup) y se auto-borra al final
+        // 5) crear scheduler (una sola vez)
         $API->comm('/system/scheduler/add', [
             'name'       => $schedName,
-            'start-time' => 'startup',     // ✅ corre inmediatamente
-            'interval'   => '0s',          // ✅ no recurrente
+            'start-date' => $routerDate,
+            'start-time' => $startTime,
+            'interval'   => '0s',
             'policy'     => 'read,write,test',
             'on-event'   => $onEvent,
             'comment'    => 'Auto-expire hotspot user',
+            'disabled'   => 'no',
         ]);
 
-        log_message('info', "Scheduler creado: {$schedName} (startup) delay {$delay}");
+        log_message('info', "Scheduler creado {$schedName} start {$routerDate} {$startTime} delay {$delay}");
     }
 }
