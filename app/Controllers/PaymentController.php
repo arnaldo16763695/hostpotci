@@ -11,8 +11,12 @@ class PaymentController extends BaseController
 
     public function index()
     {
-        // return  view('creater-order-payment'); 
-        return  view('home-payment');
+        $ip = $this->request->getPost('ip');
+        $mac = $this->request->getPost('mac');
+        return  view('home-payment', [
+            'ip' => $ip,
+            'mac' => $mac,
+        ]);
     }
 
     protected $helpers = ['form'];

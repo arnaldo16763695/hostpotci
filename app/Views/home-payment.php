@@ -43,8 +43,8 @@
                                 id="phone">
                         </div>
 
-                        <input type="hidden" class="form-control" id="ip" name="ip" value="<?= $_POST['ip']; ?>">
-                        <input type="hidden" class="form-control" id="mac" name="mac" value="<?= $_POST['mac']; ?>">
+                        <input type="hidden" class="form-control" id="ip" name="ip" value="<?= esc($ip ?? '') ?>">
+                        <input type="hidden" class="form-control" id="mac" name="mac" value="<?= esc($mac ?? '') ?>">
 
                         <div class="mb-3 mt-3 d-flex justify-content-end">
                             <button type="submit" class="btn btn-primary" id="btnSubmit">Conectar</button>
@@ -61,7 +61,7 @@
                 <?php endif; ?>
             </div>
             <div class="mb-3 mt-3 d-flex justify-content-center">
-                <a id="transference" href="<?= base_url('create-order-payment'); ?>?ip=<?= $_POST['ip']; ?>&mac=<?= $_POST['mac']; ?>" class="">
+                <a id="transference" href="<?= base_url('create-order-payment'); ?>?ip=<?= esc($ip ?? '') ?>&mac=<?= esc($mac ?? '') ?>" class="">
                     ¿ No estás registrado ? regístrate
                 </a>
             </div>
