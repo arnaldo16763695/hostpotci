@@ -481,7 +481,7 @@ class PaymentController extends BaseController
 
                     // 5) Scheduler expiración continua (misma conexión)
                     $delay = $this->planToDelay($plan); // 1000/3000/5000/10000 -> 1h/1d/2d/7d
-                    $this->scheduleHotspotExpiry($API, $payload['phone'], $delay);
+                    $this->scheduleHotspotExpiryAt($API, $payload['phone'], $delay);
                 } catch (\Throwable $e) {
                     log_message('error', 'createUserMikrotik() exception: ' . $e->getMessage());
                     $API->disconnect();
@@ -625,11 +625,11 @@ class PaymentController extends BaseController
     //     log_message('info', "Scheduler creado: {$schedName} start {$routerDate} {$startTime} delay {$delay}");
     // }
 
-    private function scheduleHotspotExpiry(RouterosAPI $API, string $userName, string $delay): void
+    private function scheduleHotspotExpiryAt(RouterosAPI $API, string $userName, string $plan): void
     {
         $schedName = 'exp-' . $userName;
 
-        // 1) leer hora del router
+        // 1) hora del router
         $clock = $API->comm('/system/clock/print');
         $routerDate = $clock[0]['date'] ?? null; // ej: "jan/19/2026"
         $routerTime = $clock[0]['time'] ?? null; // ej: "22:31:05"
@@ -639,50 +639,74 @@ class PaymentController extends BaseController
             return;
         }
 
-        // 2) sumar 5 segundos
-        [$h, $m, $s] = array_map('intval', explode(':', $routerTime));
-        $s += 5;
-        if ($s >= 60) {
-            $s -= 60;
-            $m += 1;
+        // 2) parse router datetime (RouterOS usa meses tipo jan/feb...)
+        // Normalizamos: "jan/19/2026" -> "Jan/19/2026"
+        $routerDateNorm = ucfirst($routerDate);
+        $now = \DateTimeImmutable::createFromFormat('M/d/Y H:i:s', $routerDateNorm . ' ' . $routerTime);
+        if (!$now) {
+            log_message('error', "No se pudo parsear fecha/hora del router: {$routerDate} {$routerTime}");
+            return;
         }
-        if ($m >= 60) {
-            $m -= 60;
-            $h += 1;
+
+        // 3) convertir plan a segundos (ajusta a tus planes reales)
+        $seconds = $this->planToSeconds($plan);
+        if ($seconds <= 0) {
+            log_message('error', "Plan inválido: {$plan}");
+            return;
         }
-        if ($h >= 24) {
-            $h -= 24;
-        } // para tu caso basta
 
-        $startTime = sprintf('%02d:%02d:%02d', $h, $m, $s);
+        $expires = $now->modify("+{$seconds} seconds");
 
-        // 3) borrar scheduler anterior si existe
+        // 4) formatear para RouterOS scheduler (mes en minúscula como lo entrega router)
+        $startDate = strtolower($expires->format('M')) . '/' . $expires->format('d/Y'); // ej "jan/20/2026"
+        $startTime = $expires->format('H:i:s');
+
+        // 5) borrar scheduler anterior si existe
         $old = $API->comm('/system/scheduler/print', ['?name' => $schedName, '.proplist' => '.id']);
-        if (!empty($old) && !empty($old[0]['.id'])) {
+        if (!empty($old[0]['.id'])) {
             $API->comm('/system/scheduler/remove', ['.id' => $old[0]['.id']]);
         }
 
-        // 4) evento
+        // 6) evento (sin :delay)
         $onEvent =
-            ':log warning ("EXP-START user=' . $userName . ' delay=' . $delay . '"); ' .
-            ':delay ' . $delay . '; ' .
-            ':log warning ("EXP-KILL user=' . $userName . '"); ' .
+            ':log warning ("EXP-KILL user=' . $userName . ' plan=' . $plan . '"); ' .
             '/ip hotspot active remove [find user="' . $userName . '"]; ' .
             '/ip hotspot user remove [find name="' . $userName . '"]; ' .
             '/system scheduler remove [find name="' . $schedName . '"];';
 
-        // 5) crear scheduler (una sola vez)
+        // 7) crear scheduler (una sola vez)
         $API->comm('/system/scheduler/add', [
             'name'       => $schedName,
-            'start-date' => $routerDate,
+            'start-date' => $startDate,
             'start-time' => $startTime,
             'interval'   => '0s',
             'policy'     => 'read,write,test',
             'on-event'   => $onEvent,
-            'comment'    => 'Auto-expire hotspot user',
+            'comment'    => "Auto-expire hotspot user (plan={$plan})",
             'disabled'   => 'no',
         ]);
 
-        log_message('info', "Scheduler creado {$schedName} start {$routerDate} {$startTime} delay {$delay}");
+        log_message('info', "Scheduler creado {$schedName} expira {$startDate} {$startTime} plan {$plan}");
+    }
+
+    private function planToSeconds(string $plan): int
+    {
+        // Ejemplos: "5m", "1h", "1d", "7d"
+        // Ajusta si tus planes son "1d" "3d" etc.
+        if (!preg_match('/^(\d+)\s*([smhdw])$/i', trim($plan), $m)) {
+            return 0;
+        }
+
+        $n = (int)$m[1];
+        $u = strtolower($m[2]);
+
+        return match ($u) {
+            's' => $n,
+            'm' => $n * 60,
+            'h' => $n * 3600,
+            'd' => $n * 86400,
+            'w' => $n * 604800,
+            default => 0,
+        };
     }
 }
