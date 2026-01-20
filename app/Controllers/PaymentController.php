@@ -629,26 +629,24 @@ class PaymentController extends BaseController
     {
         $schedName = 'exp-' . $userName;
 
-        // 1) hora del router
+        // 1) leer hora del router
         $clock = $API->comm('/system/clock/print');
-        $routerDate = $clock[0]['date'] ?? null; // ej: "jan/19/2026"
-        $routerTime = $clock[0]['time'] ?? null; // ej: "22:31:05"
+        $routerDate = $clock[0]['date'] ?? null; // puede ser "jan/19/2026" o "2026-01-20"
+        $routerTime = $clock[0]['time'] ?? null; // "17:51:36"
 
         if (!$routerDate || !$routerTime) {
             log_message('error', 'No se pudo leer /system/clock/print');
             return;
         }
 
-        // 2) parse router datetime (RouterOS usa meses tipo jan/feb...)
-        // Normalizamos: "jan/19/2026" -> "Jan/19/2026"
-        $routerDateNorm = ucfirst($routerDate);
-        $now = \DateTimeImmutable::createFromFormat('M/d/Y H:i:s', $routerDateNorm . ' ' . $routerTime);
+        // 2) parsear fecha/hora del router (soporta 2 formatos)
+        $now = $this->parseRouterDateTime($routerDate, $routerTime);
         if (!$now) {
             log_message('error', "No se pudo parsear fecha/hora del router: {$routerDate} {$routerTime}");
             return;
         }
 
-        // 3) convertir plan a segundos (ajusta a tus planes reales)
+        // 3) plan -> segundos
         $seconds = $this->planToSeconds($plan);
         if ($seconds <= 0) {
             log_message('error', "Plan inválido: {$plan}");
@@ -657,8 +655,8 @@ class PaymentController extends BaseController
 
         $expires = $now->modify("+{$seconds} seconds");
 
-        // 4) formatear para RouterOS scheduler (mes en minúscula como lo entrega router)
-        $startDate = strtolower($expires->format('M')) . '/' . $expires->format('d/Y'); // ej "jan/20/2026"
+        // 4) start-date/start-time en el MISMO formato que usa el router
+        $startDate = $this->formatRouterDateLikeInput($expires, $routerDate);
         $startTime = $expires->format('H:i:s');
 
         // 5) borrar scheduler anterior si existe
@@ -686,17 +684,51 @@ class PaymentController extends BaseController
             'disabled'   => 'no',
         ]);
 
+        // 8) verificar que exista
+        $check = $API->comm('/system/scheduler/print', ['?name' => $schedName, '.proplist' => 'name,start-date,start-time,disabled']);
+        if (empty($check)) {
+            log_message('error', "Scheduler NO quedó creado: {$schedName} (start {$startDate} {$startTime})");
+            return;
+        }
+
         log_message('info', "Scheduler creado {$schedName} expira {$startDate} {$startTime} plan {$plan}");
+    }
+
+    private function parseRouterDateTime(string $routerDate, string $routerTime): ?\DateTimeImmutable
+    {
+        $routerDate = trim($routerDate);
+        $routerTime = trim($routerTime);
+
+        // Formato ISO: 2026-01-20
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $routerDate)) {
+            $dt = \DateTimeImmutable::createFromFormat('Y-m-d H:i:s', "{$routerDate} {$routerTime}");
+            return $dt ?: null;
+        }
+
+        // Formato RouterOS clásico: jan/19/2026 (mes en letras)
+        // Normalizamos "jan" -> "Jan" para que PHP lo entienda
+        $dateNorm = preg_replace_callback('/^[a-z]{3}/', fn($m) => ucfirst($m[0]), strtolower($routerDate));
+        $dt = \DateTimeImmutable::createFromFormat('M/d/Y H:i:s', "{$dateNorm} {$routerTime}");
+        return $dt ?: null;
+    }
+
+    private function formatRouterDateLikeInput(\DateTimeImmutable $dt, string $routerDateInput): string
+    {
+        // Si el router entrega ISO, devolvemos ISO
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', trim($routerDateInput))) {
+            return $dt->format('Y-m-d');
+        }
+
+        // Si el router entrega "jan/19/2026", devolvemos igual (mes en minúscula)
+        return strtolower($dt->format('M')) . '/' . $dt->format('d/Y');
     }
 
     private function planToSeconds(string $plan): int
     {
-        // Ejemplos: "5m", "1h", "1d", "7d"
-        // Ajusta si tus planes son "1d" "3d" etc.
+        // Soporta: 1d, 2d, 7d, 12h, 30m, etc.
         if (!preg_match('/^(\d+)\s*([smhdw])$/i', trim($plan), $m)) {
             return 0;
         }
-
         $n = (int)$m[1];
         $u = strtolower($m[2]);
 
