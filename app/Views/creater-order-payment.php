@@ -74,12 +74,31 @@ $error = session()->getFlashdata('hotspot_error');
                         </div>
 
                 </form>
+                <?php
+                // Ajusta la zona horaria según tu país/servidor:
+                date_default_timezone_set('America/Santiago'); // Chile
 
-                <div class="mb-3 mt-3 d-flex justify-content-center">
-                    <a id="transference" href="<?= base_url('contact-transference'); ?>" class="">
-                        Pagar por transferencia
-                    </a>
-                </div>
+                $now = new DateTime('now');
+                $start = (new DateTime('today'))->setTime(6, 0, 0);      // 06:00
+                $end   = (new DateTime('today'))->setTime(23, 59, 59);   // 23:59:59 (equivale a "hasta 12:00 AM")
+                $showTransference = ($now >= $start && $now <= $end);
+                ?>
+
+
+                <?php if ($showTransference): ?>
+                    <div class="mb-3 mt-3 d-flex justify-content-center">
+                        <a id="transference" href="<?= base_url('contact-transference'); ?>" class="">
+                            Pagar por transferencia
+                        </a>
+                    </div>
+                <?php else: ?>
+                    <div class="mb-3 mt-3 text-center">
+                        <small class="text-muted">
+                            La opción de pago por transferencia solo está habilitada en el horario de 6:00 am a 12:00 am.
+                        </small>
+                    </div>
+                <?php endif; ?>
+
                 <?php if (session()->getFlashdata('errors') !== null): ?>
                     <div class="alert alert-danger my-3" role="alert">
                         <?= session()->getFlashdata(('errors'))  ?>
