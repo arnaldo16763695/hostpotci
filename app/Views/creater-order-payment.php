@@ -39,6 +39,24 @@ $error = session()->getFlashdata('hotspot_error');
                                 autofocus
                                 id="phone">
                         </div>
+                        <div class="mb-3">
+                            <label class="mb-2" for="phone">Confirma el teléfono</label>
+                            <!-- <input type="text" class="form-control" name="phone" id="phone" required> -->
+                            <input
+                                class="form-control"
+                                type="text"
+                                name="phoneConfirm"
+                                required
+                                inputmode="numeric"
+                                autocomplete="tel"
+                                maxlength="9"
+                                pattern="^9[0-9]{8}$"
+                                title="Debe ser 9XXXXXXXX (9 dígitos, sin espacios)"
+                                id="phoneConfirm">
+                            <div class="invalid-feedback">
+                                Los teléfonos no coinciden.
+                            </div>
+                        </div>
                         <div class="d-flex flex-column  ">
 
                             <div class="p-2 form-check">
@@ -82,7 +100,6 @@ $error = session()->getFlashdata('hotspot_error');
                 $end   = (new DateTime('today'))->setTime(23, 59, 59);   // 23:59:59 (equivale a "hasta 12:00 AM")
                 $showTransference = ($now >= $start && $now <= $end);
                 ?>
-
 
                 <?php if ($showTransference): ?>
                     <div class="mb-3 mt-3 d-flex justify-content-center">
@@ -132,6 +149,55 @@ $error = session()->getFlashdata('hotspot_error');
     </div>
 </div>
 
+<script>
+    (function() {
+        const form = document.getElementById('hotspotForm');
+        const phone = document.getElementById('phone');
+        const phoneConfirm = document.getElementById('phoneConfirm');
+        const btnSubmit = document.getElementById('btnSubmit');
+
+        function validatePhonesMatch() {
+            const a = (phone.value || '').trim();
+            const b = (phoneConfirm.value || '').trim();
+
+            const match = a !== '' && b !== '' && a === b;
+
+            // Si el confirm está vacío, no lo marcamos como error todavía
+            if (b === '') {
+                phoneConfirm.setCustomValidity('');
+                phoneConfirm.classList.remove('is-invalid');
+                btnSubmit.disabled = false;
+                return true;
+            }
+
+            if (!match) {
+                phoneConfirm.setCustomValidity('no-match');
+                phoneConfirm.classList.add('is-invalid');
+                btnSubmit.disabled = true;
+                return false;
+            }
+
+            phoneConfirm.setCustomValidity('');
+            phoneConfirm.classList.remove('is-invalid');
+            btnSubmit.disabled = false;
+            return true;
+        }
+
+        phone.addEventListener('input', validatePhonesMatch);
+        phoneConfirm.addEventListener('input', validatePhonesMatch);
+
+        form.addEventListener('submit', function(e) {
+            // dispara validación nativa + la nuestra
+            const ok = form.checkValidity() && validatePhonesMatch();
+            if (!ok) {
+                e.preventDefault();
+                e.stopPropagation();
+                form.classList.add('was-validated');
+                phoneConfirm.reportValidity();
+            }
+        });
+    })();
+</script>
 
 
 <?= $this->endSection('content'); ?>
