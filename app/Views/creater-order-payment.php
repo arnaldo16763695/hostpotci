@@ -76,7 +76,6 @@ $error = session()->getFlashdata('hotspot_error');
                 </form>
                 <?php
                 // Ajusta la zona horaria según tu país/servidor:
-                date_default_timezone_set('America/Santiago'); // Chile
 
                 $now = new DateTime('now');
                 $start = (new DateTime('today'))->setTime(6, 0, 0);      // 06:00
